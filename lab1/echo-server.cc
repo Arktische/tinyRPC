@@ -9,7 +9,7 @@ int EchoServer::bind(int listen_fd) {
 
 int EchoServer::listen(std::string_view host, uint16_t port) {
     if((fd_ = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) == -1) {
-
+        LOG(EchoServer)
     }
 
 }

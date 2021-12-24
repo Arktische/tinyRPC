@@ -8,7 +8,10 @@ After finishing this lab, you'll have an overview of networking programming unde
 
 ## Pre-request
 Be sure to use the following environment：
-* Ubuntu LTS
+* Linux release: Ubuntu 20.04 LTS
+* cmake version >= 3.12
+* gcc/g++ version >= 8.0
+* OS arch: amd64
 
 ## Architecture
 The whole project is divided into few steps, in each piece you will write your code into the skeleton code.
