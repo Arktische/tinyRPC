@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(
         lab1
+        common
 )
 
 add_library(${PROJECT_NAME} tinyRPC.cc)

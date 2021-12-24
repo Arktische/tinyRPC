@@ -4,5 +4,5 @@
 
 #ifndef TINYRPC_TIMESTAMP_HPP
 #define TINYRPC_TIMESTAMP_HPP
-#include <common/clock.hpp>
+#include "clock.hpp"
 #endif //TINYRPC_TIMESTAMP_HPP

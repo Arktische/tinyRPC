@@ -6,7 +6,7 @@
 #define TINYRPC_CLOCK_HPP
 #include <sys/types.h>
 #include <sys/time.h>
-#include <common/fast-clock.hpp>
+#include "fast-clock.hpp"
 namespace common {
     class Clock {
         Clock() = delete;
