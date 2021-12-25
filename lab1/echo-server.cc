@@ -3,6 +3,12 @@
 //
 
 #include <echo-server.hpp>
+#include <common/clock.hpp>
+#include <common/fast-clock.hpp>
+#include <common/log.hpp>
+#include <common/non-copyable.h>
+#include <common/thread.hpp>
+#include <common/timestamp.hpp>
 int EchoServer::bind(int listen_fd) {
     fd_ = listen_fd;
 }

@@ -4,8 +4,6 @@
 
 #ifndef TINYRPC_THREAD_HPP
 #define TINYRPC_THREAD_HPP
-
-#include "non-copyable.h"
 #include <functional>
 #include <thread>
 #include <sys/prctl.h>
