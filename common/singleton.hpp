@@ -7,16 +7,15 @@
 template <class T> class Singleton {
 protected:
   Singleton() = default;
-
+  virtual ~Singleton() = default;
 public:
   Singleton(const Singleton &) = delete;
   Singleton &operator=(const Singleton &) = delete;
-  ~Singleton() = default;
-
+  Singleton(T&&) = delete;
 public:
   static T &getInstance() {
-    static T inst;
-    return inst;
+    static T instance;
+    return instance;
   }
 };
 #endif // TINYRPC_SINGLETON_HPP

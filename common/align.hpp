@@ -6,6 +6,12 @@
 #define TINYRPC_CACHELINE_ALIGN_HPP
 #include <cstddef>
 namespace common {
-using max_align_v = std::max_align_t;
-}
+const std::size_t hw_destructive_interference_size =
+#ifdef __x86_64__
+    128;
+#elifdef __arm__
+    64;
+#endif
+
+} // namespace common
 #endif // TINYRPC_CACHELINE_ALIGN_HPP

@@ -8,7 +8,7 @@
 namespace common {
 #define CONCAT_(a, b) a ## b
 #define CONCAT(a, b) CONCAT_(a,b)
-#define DEFER(fn) Defer CONCAT(__defer__, __LINE__) = [&] ( ) { fn ; }
+#define defer(fn) Defer CONCAT(__defer__, __LINE__) = [&] ( ) { fn ; }
     class Defer {
     public:
         template<class Func>

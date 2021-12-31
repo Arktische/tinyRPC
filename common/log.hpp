@@ -7,9 +7,12 @@
 #include <iostream>
 #define LOG(level) LogMessage<level>(__FILE__,__LINE__).stream()
 
+// LogMessageData
 struct LogMessageData {
 
 };
+
+
 
 template<class LEVEL_T>
 class LogMessage {
