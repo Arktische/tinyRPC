@@ -7,6 +7,7 @@
 #include <common/log.hpp>
 #include <common/non-copyable.h>
 #include <common/thread.hpp>
+#include <common/fsm.hpp>
 int EchoServer::bind(int listen_fd) {
     fd_ = listen_fd;
 }
