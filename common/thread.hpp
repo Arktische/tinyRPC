@@ -6,7 +6,9 @@
 #define TINYRPC_THREAD_HPP
 #include <functional>
 #include <thread>
+#ifdef __linux__
 #include <sys/prctl.h>
+#endif
 #include <sys/syscall.h>
 
 
@@ -25,9 +27,11 @@ public:
 
 private:
   static void set(const std::string_view name, const std::function<void()> &f) {
-    if (!name.empty()) {
+#ifdef __linux__
+      if (!name.empty()) {
       ::prctl(PR_SET_NAME, name, 0, 0, 0);
     }
+#endif
     f();
   }
 };

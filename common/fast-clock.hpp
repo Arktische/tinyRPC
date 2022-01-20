@@ -15,20 +15,20 @@ namespace common {
 // FastClock using intel `rdtsc` instruction to calculate time, and calibrate it
 // periodly, see https://en.wikipedia.org/wiki/Time_Stamp_Counter for more
 // detail.
+template<class AccuracyT>
 class FastClock {
   static const size_t cache_align = hw_destructive_interference_size;
-  using TimePoint = std::chrono::system_clock::time_point;
-  using NanoSec = std::chrono::nanoseconds;
+  using Time = std::time_t;
 public:
-  TimePoint Now() {
-    int64_t dur = (readTick()-firstTick_)*nsPerTick_;
-    return startRealTime_+= NanoSec(dur);
+  Time Now() {
+    int64_t dur = (readTick()-firstTick_)*durationPerTick_;
+      return std::chrono::system_clock::to_time_t(startRealTime_ + AccuracyT(dur));
   }
 private:
   alignas(cache_align) std::chrono::system_clock::time_point startRealTime_;
   alignas(cache_align) std::chrono::steady_clock::time_point startMonoTime_;
   alignas(cache_align) uint64_t firstTick_;
-  alignas(cache_align) std::atomic<double> nsPerTick_;
+  alignas(cache_align) std::atomic<double> durationPerTick_;
 
 private:
   FastClock() {
@@ -37,7 +37,7 @@ private:
     firstTick_ = readTick();
     Thread calibrator("FastClock-calibrator", [this]() {
       while (true) {
-        sleep(2);
+          std::this_thread::sleep_for(std::chrono::seconds(2));
         calibrate();
       }
     });
@@ -46,8 +46,8 @@ private:
     auto duration = std::chrono::steady_clock::now() - startMonoTime_;
     uint64_t tickDiff = readTick() - firstTick_;
 
-    nsPerTick_ =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() /
+    durationPerTick_ =
+        std::chrono::duration_cast<AccuracyT>(duration).count() /
         tickDiff;
   }
   static uint64_t readTick() {
