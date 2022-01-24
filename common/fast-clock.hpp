@@ -3,6 +3,7 @@
 //
 
 #ifndef TINYRPC_FAST_CLOCK_HPP
+#define TINYRPC_FAST_CLOCK_HPP
 #include "align.hpp"
 #include "thread.hpp"
 #include <atomic>
@@ -30,17 +31,19 @@ private:
   alignas(cache_align) uint64_t firstTick_;
   alignas(cache_align) std::atomic<double> durationPerTick_;
 
-private:
+public:
   FastClock() {
     startRealTime_ = std::chrono::system_clock::now();
     startMonoTime_ = std::chrono::steady_clock::now();
     firstTick_ = readTick();
+    ::usleep(2000);
     Thread calibrator("FastClock-calibrator", [this]() {
       while (true) {
           std::this_thread::sleep_for(std::chrono::seconds(2));
         calibrate();
       }
     });
+    calibrator.detach();
   }
   void calibrate() {
     auto duration = std::chrono::steady_clock::now() - startMonoTime_;

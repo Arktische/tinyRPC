@@ -23,7 +23,9 @@ public:
   Thread(const std::string_view id, F &&f, Args &&...args)
       : std::thread(
             set, id,
-            std::bind(std::forward<F>(f), std::forward<Args>(args)...)) {}
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...)) {
+
+  }
 
 private:
   static void set(const std::string_view name, const std::function<void()> &f) {

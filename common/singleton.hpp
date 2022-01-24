@@ -4,6 +4,7 @@
 
 #ifndef TINYRPC_SINGLETON_HPP
 #define TINYRPC_SINGLETON_HPP
+namespace common {
 template <class T> class Singleton {
 protected:
   Singleton() = default;
@@ -18,4 +19,5 @@ public:
     return instance;
   }
 };
+}
 #endif // TINYRPC_SINGLETON_HPP
