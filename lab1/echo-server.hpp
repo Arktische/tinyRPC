@@ -6,7 +6,7 @@
 #include <common/non-copyable.h>
 #include <common/log.hpp>
 #include <string_view>
-class EchoServer : NonCopyable{
+class EchoServer : common::NonCopyable{
 public:
     EchoServer();
     EchoServer(int listen_fd);
