@@ -13,5 +13,5 @@ const std::size_t hw_destructive_interference_size =
     64;
 #endif
 
-} // namespace common
-#endif // TINYRPC_CACHELINE_ALIGN_HPP
+}  // namespace common
+#endif  // TINYRPC_CACHELINE_ALIGN_HPP

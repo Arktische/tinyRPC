@@ -1,6 +1,5 @@
-#include <echo-server.hpp>
 #include <iostream>
 
-int main() {
-    EchoServer s;
-}
+#include <echo-server.hpp>
+
+int main() { EchoServer s; }

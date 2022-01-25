@@ -11,31 +11,28 @@
 #endif
 #include <sys/syscall.h>
 
-
 namespace common {
 class Thread : public std::thread {
-public:
+ public:
   Thread() = default;
 
-  Thread(Thread &&) = default;
+  Thread(Thread&&) = default;
 
   template <class F, class... Args>
-  Thread(const std::string_view id, F &&f, Args &&...args)
+  Thread(const std::string_view id, F&& f, Args&&... args)
       : std::thread(
             set, id,
-            std::bind(std::forward<F>(f), std::forward<Args>(args)...)) {
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...)) {}
 
-  }
-
-private:
-  static void set(const std::string_view name, const std::function<void()> &f) {
+ private:
+  static void set(const std::string_view name, const std::function<void()>& f) {
 #ifdef __linux__
-      if (!name.empty()) {
+    if (!name.empty()) {
       ::prctl(PR_SET_NAME, name, 0, 0, 0);
     }
 #endif
     f();
   }
 };
-} // namespace common
-#endif // TINYRPC_THREAD_HPP
+}  // namespace common
+#endif  // TINYRPC_THREAD_HPP

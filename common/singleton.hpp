@@ -5,19 +5,22 @@
 #ifndef TINYRPC_SINGLETON_HPP
 #define TINYRPC_SINGLETON_HPP
 namespace common {
-template <class T> class Singleton {
-protected:
+template <class T>
+class Singleton {
+ protected:
   Singleton() = default;
   virtual ~Singleton() = default;
-public:
-  Singleton(const Singleton &) = delete;
-  Singleton &operator=(const Singleton &) = delete;
+
+ public:
+  Singleton(const Singleton&) = delete;
+  Singleton& operator=(const Singleton&) = delete;
   Singleton(T&&) = delete;
-public:
-  static T &getInstance() {
+
+ public:
+  static T& getInstance() {
     static T instance;
     return instance;
   }
 };
-}
-#endif // TINYRPC_SINGLETON_HPP
+}  // namespace common
+#endif  // TINYRPC_SINGLETON_HPP
