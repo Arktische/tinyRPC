@@ -4,10 +4,12 @@ include_directories(
         ${PROJECT_SOURCE_DIR}
 )
 enable_testing()
+
+add_compile_options(-mavx2)
 add_executable(
         common_test
         common-test.cc
-)
+        trait.hpp)
 
 target_link_libraries(
         common_test
