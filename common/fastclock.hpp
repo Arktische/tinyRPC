@@ -2,8 +2,8 @@
 // Created by tyx on 12/23/21.
 //
 
-#ifndef TINYRPC_FAST_CLOCK_HPP
-#define TINYRPC_FAST_CLOCK_HPP
+#ifndef TINYRPC_FASTCLOCK_HPP
+#define TINYRPC_FASTCLOCK_HPP
 #include <unistd.h>
 
 #include <atomic>
@@ -65,4 +65,4 @@ class FastClock {
 };
 }  // namespace common
 
-#endif  // TINYRPC_FAST_CLOCK_HPP
+#endif  // TINYRPC_FASTCLOCK_HPP

@@ -7,7 +7,7 @@
 #include <climits>
 #include <random>
 
-#include "fast-clock.hpp"
+#include "fastclock.hpp"
 #include "log.hpp"
 TEST(common, test_log) {
   using common::LogMessage;

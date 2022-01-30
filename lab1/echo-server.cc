@@ -2,7 +2,7 @@
 // Created by tyx on 12/23/21.
 //
 
-#include <common/fast-clock.hpp>
+#include <common/fastclock.hpp>
 #include <common/fsm.hpp>
 #include <common/log.hpp>
 #include <common/non-copyable.hpp>

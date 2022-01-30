@@ -4,7 +4,6 @@
 #pragma once
 #ifndef TINYRPC_LOG_HPP
 #define TINYRPC_LOG_HPP
-#include <immintrin.h>
 
 #include <cinttypes>
 #include <cstring>
@@ -13,7 +12,7 @@
 #include <vector>
 
 #include "dtoa-grisu2.hpp"
-#include "fast-clock.hpp"
+#include "fastclock.hpp"
 #include "non-copyable.hpp"
 #include "singleton.hpp"
 #include "trait.hpp"
@@ -30,30 +29,6 @@ using std::string;
 static const int kSmallBufferSize = 1024;
 static const int kLargeBufferSize = 4096;
 static const int kMaxNumericSize = 48;
-#if defined(__x86_64) || defined(__x86_64__)
-inline void memcpy(char* dst, const char* src, size_t size) {
-  if (!(size >> 8)) {
-    std::memcpy(dst, src, size);
-    return;
-  }
-  auto p = reinterpret_cast<const char*>((reinterpret_cast<size_t>(src) + 31) &
-                                         (~31ll));
-  auto diff = p - src;
-  std::memcpy(dst, src, diff);
-  dst += diff;
-  src += diff;
-  size -= diff;
-  size_t tms = size >> 5;
-  while (tms--) {
-    __m256i _src = _mm256_load_si256(reinterpret_cast<const __m256i*>(src));
-    _mm256_store_si256(reinterpret_cast<__m256i*>(dst), _src);
-    dst += 16;
-    src += 16;
-  }
-  std::memcpy(dst, src, size & 0x1f);
-}
-#endif
-
 template <size_t SIZE>
 class LogStreamBuffer : NonCopyable {
  public:
