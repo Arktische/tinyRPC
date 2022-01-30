@@ -7,6 +7,7 @@
 #include <immintrin.h>
 
 #include <cinttypes>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -100,20 +101,21 @@ static_assert(sizeof digitsHex == 17, "wrong number of digitsHex");
 const static size_t kWordSize = sizeof(int*);
 
 // Efficient Integer to String Conversions, by Matthew Wilson.
-// refer to muduo
-template <typename T>
-size_t convert(char buf[], size_t len, T value) {
+// refer to muduo, modified to support 64bit-integer
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>,void>>
+size_t convert(char buf[], size_t maxlen, T value) {
   static_assert(std::is_integral<T>::value,
                 "instantiated template param integerT requires integral type");
   using uiT = std::make_unsigned_t<T>;
   using umiT = make_umi_t<uiT>;
-  static constexpr int shift_offset = sizeof(T)*8+3;
-  static constexpr auto base = static_cast<uiT>((sizeof(T) <= 4)?0xcccccccd:0xcccccccccccccccd);
+  static constexpr int shift_offset = sizeof(T) * 8 + 3;
+  static constexpr auto base =
+      static_cast<uiT>((sizeof(T) <= 4) ? 0xcccccccd : 0xcccccccccccccccd);
 
   uiT v = value > 0 ? value : -value;
   char* p = buf;
-  for (int i = 0; v != 0 && i < len; i++) {
-    umiT vv = (umiT)((umiT)v * base)>> shift_offset;
+  for (int i = 0; v != 0 && i < maxlen; i++) {
+    umiT vv = (umiT)((umiT)v * base) >> shift_offset;
     int lsd = static_cast<int>(v - vv * 10);
     v = vv;
     *p++ = zero[lsd];
@@ -274,34 +276,44 @@ class LogStream {
     *this << static_cast<int>(v);
     return *this;
   }
+
   self& operator<<(unsigned short v) {
     *this << static_cast<unsigned int>(v);
     return *this;
   }
-  self& operator<<(int v) {
+
+  template <typename T, typename = std::enable_if_t<std::is_integral_v<T>,void>>
+  self& operator<<(T v) {
+    static_assert(std::is_integral_v<T>,
+                  "integer type required to instantiate this template");
     formatInteger(v);
     return *this;
   }
-  self& operator<<(unsigned int v) {
-    formatInteger(v);
-    return *this;
-  }
-  self& operator<<(long v) {
-    formatInteger(v);
-    return *this;
-  }
-  self& operator<<(unsigned long v) {
-    formatInteger(v);
-    return *this;
-  }
-  self& operator<<(long long v) {
-    formatInteger(v);
-    return *this;
-  }
-  self& operator<<(unsigned long long v) {
-    formatInteger(v);
-    return *this;
-  }
+
+  //  self& operator<<(int v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
+  //  self& operator<<(unsigned int v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
+  //  self& operator<<(long v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
+  //  self& operator<<(unsigned long v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
+  //  self& operator<<(long long v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
+  //  self& operator<<(unsigned long long v) {
+  //    formatInteger(v);
+  //    return *this;
+  //  }
 
   self& operator<<(const void*);
 

@@ -47,46 +47,5 @@ struct make_unsigned_mul_integer<unsigned long long>{
 };
 
 template<typename T> using make_umi_t =typename make_unsigned_mul_integer<T>::type;
-
-//template <typename T>
-//struct make_fast_div10<T,typename std::enable_if<sizeof(T)<=4,uint32_t>::type> {
-//    static const uint32_t base = 0xcccccccd;
-//    static const int shift_offset = 32 + 3;
-//    typedef uint64_t mul_type;
-//};
-//
-//template <typename T>
-//struct make_fast_div10<T, typename std::enable_if<true,uint64_t>::type> {
-//    static const uint64_t base = 0xcccccccccccccccd;
-//    static const int shift_offset = 64 + 3;
-//    typedef __uint128_t mul_type;
-//};
-//
-//template <typename T>
-
-
-//template <typename T>
-//struct make_fast_div10 {
-//  template <T, typename en = void >
-//  struct def<T,std::enable_if<true,T>> {
-//
-//  };
-//};
-//
-//template <>
-//struct make_fast_div10 {
-//  static const uint32_t base = 0xcccccccd;
-//  static const int shift_offset = 32 + 3;
-//  typedef uint64_t mul_type;
-//};
-//
-//template <typename T>
-//struct make_fast_div10<
-//    T, typename std::enable_if<(sizeof(T) > 4) && std::is_unsigned<T>::value,
-//                               T>::type> {
-//  static const uint64_t base = 0xcccccccccccccccd;
-//  static const int shift_offset = 64 + 3;
-//  typedef __uint128_t mul_type;
-//};
 }  // namespace common
 #endif  // TINYRPC_TRAIT_HPP

@@ -16,6 +16,17 @@ target_link_libraries(
         gtest_main
         ${GTEST_LIBRARIES}
 )
+
+add_executable(
+        common_bench
+        common-bench.cc
+)
+
+target_link_libraries(
+        common_bench
+        benchmark::benchmark
+)
+
 include(GoogleTest)
 gtest_discover_tests(
         common_test
