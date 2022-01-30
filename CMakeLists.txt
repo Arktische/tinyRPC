@@ -2,6 +2,21 @@ cmake_minimum_required(VERSION 3.12)
 project(tinyRPC VERSION 0.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(STATUS "OS: Linux")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    message(STATUS "OS: macOS")
+else()
+    message(FATAL_ERROR "Not supported platform ${CMAKE_SYSTEM_NAME}")
+endif()
+
+if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+    message(STATUS "Arch: x86_64 cpu")
+else()
+    message(FATAL_ERROR "Not supported arch ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
         googletest

@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 
+#include "dtoa-grisu2.hpp"
 #include "fast-clock.hpp"
 #include "non-copyable.hpp"
 #include "singleton.hpp"
@@ -91,18 +92,16 @@ class LogStreamBuffer : NonCopyable {
 
 template <size_t SIZE>
 thread_local char LogStreamBuffer<SIZE>::data_[64 + SIZE] = {0};
-const char digits[] = "9876543210123456789";
-const char* zero = digits + 9;
+static const char digits[]{"9876543210123456789"};
+static const char* zero = digits + 9;
 static_assert(sizeof(digits) == 20, "wrong number of digits");
 
-const char digitsHex[] = "0123456789ABCDEF";
+const char digitsHex[]{"0123456789ABCDEF"};
 static_assert(sizeof digitsHex == 17, "wrong number of digitsHex");
-
-const static size_t kWordSize = sizeof(int*);
 
 // Efficient Integer to String Conversions, by Matthew Wilson.
 // refer to muduo, modified to support 64bit-integer
-template <typename T, typename = std::enable_if_t<std::is_integral_v<T>,void>>
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, void>>
 size_t convert(char buf[], size_t maxlen, T value) {
   static_assert(std::is_integral<T>::value,
                 "instantiated template param integerT requires integral type");
@@ -113,143 +112,34 @@ size_t convert(char buf[], size_t maxlen, T value) {
       static_cast<uiT>((sizeof(T) <= 4) ? 0xcccccccd : 0xcccccccccccccccd);
 
   uiT v = value > 0 ? value : -value;
-  char* p = buf;
-  for (int i = 0; v != 0 && i < maxlen; i++) {
-    umiT vv = (umiT)((umiT)v * base) >> shift_offset;
-    int lsd = static_cast<int>(v - vv * 10);
-    v = vv;
-    *p++ = zero[lsd];
+  char* ptr = buf;
+  int i;
+  for (i = 0; v != 0 && 1 < maxlen - i; i++) {
+    umiT q = (umiT)((umiT)v * base) >> shift_offset;
+    *ptr++ = zero[static_cast<int>(v - q * 10)];
+    v = q;
   }
-  if (value < 0) {
-    *p++ = '-';
+  if (value < 0 && maxlen - i > 2) {
+    *ptr++ = '-';
+  }
+  *ptr = '\0';
+  std::reverse(buf, ptr);
+  return ptr - buf;
+}
+
+template <typename T, typename = std::enable_if_t<std::is_pointer_v<T>, void>>
+size_t convertHex(char buf[], size_t maxlen, T value) {
+  auto v = reinterpret_cast<uintptr_t>(value);
+  char* p = buf;
+  int i;
+  for (i = 0; v != 0 && 1 < maxlen - i; ++i) {
+    auto q = v >> 4;
+    *p++ = digitsHex[static_cast<int>(v - (q << 4))];
+    v = q;
   }
   *p = '\0';
   std::reverse(buf, p);
   return p - buf;
-}
-
-size_t convertHex(char buf[], uintptr_t value) {
-  uintptr_t i = value;
-  char* p = buf;
-  do {
-    int lsd = static_cast<int>(i % 16);
-    i /= 16;
-    *p++ = digitsHex[lsd];
-  } while (i != 0);
-  *p = '\0';
-  std::reverse(buf, p);
-  return p - buf;
-}
-
-/*
- Format a number with 5 characters, including SI units.
- [0,     999]
- [1.00k, 999k]
- [1.00M, 999M]
- [1.00G, 999G]
- [1.00T, 999T]
- [1.00P, 999P]
- [1.00E, inf)
-*/
-std::string formatSI(int64_t s) {
-  auto n = static_cast<double>(s);
-  char buf[64];
-  if (s < 1000)
-    snprintf(buf, sizeof(buf), "%" PRId64, s);
-  else if (s < 9995)
-    snprintf(buf, sizeof(buf), "%.2fk", n / 1e3);
-  else if (s < 99950)
-    snprintf(buf, sizeof(buf), "%.1fk", n / 1e3);
-  else if (s < 999500)
-    snprintf(buf, sizeof(buf), "%.0fk", n / 1e3);
-  else if (s < 9995000)
-    snprintf(buf, sizeof(buf), "%.2fM", n / 1e6);
-  else if (s < 99950000)
-    snprintf(buf, sizeof(buf), "%.1fM", n / 1e6);
-  else if (s < 999500000)
-    snprintf(buf, sizeof(buf), "%.0fM", n / 1e6);
-  else if (s < 9995000000)
-    snprintf(buf, sizeof(buf), "%.2fG", n / 1e9);
-  else if (s < 99950000000)
-    snprintf(buf, sizeof(buf), "%.1fG", n / 1e9);
-  else if (s < 999500000000)
-    snprintf(buf, sizeof(buf), "%.0fG", n / 1e9);
-  else if (s < 9995000000000)
-    snprintf(buf, sizeof(buf), "%.2fT", n / 1e12);
-  else if (s < 99950000000000)
-    snprintf(buf, sizeof(buf), "%.1fT", n / 1e12);
-  else if (s < 999500000000000)
-    snprintf(buf, sizeof(buf), "%.0fT", n / 1e12);
-  else if (s < 9995000000000000)
-    snprintf(buf, sizeof(buf), "%.2fP", n / 1e15);
-  else if (s < 99950000000000000)
-    snprintf(buf, sizeof(buf), "%.1fP", n / 1e15);
-  else if (s < 999500000000000000)
-    snprintf(buf, sizeof(buf), "%.0fP", n / 1e15);
-  else
-    snprintf(buf, sizeof(buf), "%.2fE", n / 1e18);
-  return buf;
-}
-
-/*
- [0, 1023]
- [1.00Ki, 9.99Ki]
- [10.0Ki, 99.9Ki]
- [ 100Ki, 1023Ki]
- [1.00Mi, 9.99Mi]
-*/
-std::string formatIEC(int64_t s) {
-  auto n = static_cast<double>(s);
-  char buf[64];
-  const double Ki = 1024.0;
-  const double Mi = Ki * 1024.0;
-  const double Gi = Mi * 1024.0;
-  const double Ti = Gi * 1024.0;
-  const double Pi = Ti * 1024.0;
-  const double Ei = Pi * 1024.0;
-
-  if (n < Ki)
-    snprintf(buf, sizeof buf, "%" PRId64, s);
-  else if (n < Ki * 9.995)
-    snprintf(buf, sizeof buf, "%.2fKi", n / Ki);
-  else if (n < Ki * 99.95)
-    snprintf(buf, sizeof buf, "%.1fKi", n / Ki);
-  else if (n < Ki * 1023.5)
-    snprintf(buf, sizeof buf, "%.0fKi", n / Ki);
-
-  else if (n < Mi * 9.995)
-    snprintf(buf, sizeof buf, "%.2fMi", n / Mi);
-  else if (n < Mi * 99.95)
-    snprintf(buf, sizeof buf, "%.1fMi", n / Mi);
-  else if (n < Mi * 1023.5)
-    snprintf(buf, sizeof buf, "%.0fMi", n / Mi);
-
-  else if (n < Gi * 9.995)
-    snprintf(buf, sizeof buf, "%.2fGi", n / Gi);
-  else if (n < Gi * 99.95)
-    snprintf(buf, sizeof buf, "%.1fGi", n / Gi);
-  else if (n < Gi * 1023.5)
-    snprintf(buf, sizeof buf, "%.0fGi", n / Gi);
-
-  else if (n < Ti * 9.995)
-    snprintf(buf, sizeof buf, "%.2fTi", n / Ti);
-  else if (n < Ti * 99.95)
-    snprintf(buf, sizeof buf, "%.1fTi", n / Ti);
-  else if (n < Ti * 1023.5)
-    snprintf(buf, sizeof buf, "%.0fTi", n / Ti);
-
-  else if (n < Pi * 9.995)
-    snprintf(buf, sizeof buf, "%.2fPi", n / Pi);
-  else if (n < Pi * 99.95)
-    snprintf(buf, sizeof buf, "%.1fPi", n / Pi);
-  else if (n < Pi * 1023.5)
-    snprintf(buf, sizeof buf, "%.0fPi", n / Pi);
-
-  else if (n < Ei * 9.995)
-    snprintf(buf, sizeof buf, "%.2fEi", n / Ei);
-  else
-    snprintf(buf, sizeof buf, "%.1fEi", n / Ei);
-  return buf;
 }
 
 class LogStream {
@@ -262,11 +152,10 @@ class LogStream {
   self& flush() { return *this; }
   template <typename T>
   void formatInteger(T v) {
-    if (buffer_.avail() >= kMaxNumericSize) {
-      buffer_.appendfx([&v](char* dst, size_t avail) -> size_t {
+    if (buffer_.avail() > kMaxNumericSize)
+      buffer_.appendfx([v](char* dst, size_t avail) -> size_t {
         return convert(dst, avail, v);
       });
-    }
   }
   self& operator<<(bool v) {
     buffer_.append(v ? "1" : "0", 1);
@@ -282,7 +171,8 @@ class LogStream {
     return *this;
   }
 
-  template <typename T, typename = std::enable_if_t<std::is_integral_v<T>,void>>
+  template <typename T,
+            typename = std::enable_if_t<std::is_integral_v<T>, void>>
   self& operator<<(T v) {
     static_assert(std::is_integral_v<T>,
                   "integer type required to instantiate this template");
@@ -290,38 +180,25 @@ class LogStream {
     return *this;
   }
 
-  //  self& operator<<(int v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-  //  self& operator<<(unsigned int v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-  //  self& operator<<(long v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-  //  self& operator<<(unsigned long v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-  //  self& operator<<(long long v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-  //  self& operator<<(unsigned long long v) {
-  //    formatInteger(v);
-  //    return *this;
-  //  }
-
-  self& operator<<(const void*);
+  self& operator<<(const void* ptr) {
+    if (buffer_.avail() > sizeof(ptr))
+      buffer_.appendfx([ptr](char* dst, size_t avail) -> size_t {
+        return convertHex(dst, avail, ptr);
+      });
+    return *this;
+  }
 
   self& operator<<(float v) {
     *this << static_cast<double>(v);
     return *this;
   }
-  self& operator<<(double);
+  self& operator<<(double v) {
+    if(buffer_.avail() > kMaxNumericSize)
+      buffer_.appendfx([v](char* dst, size_t avail)->size_t{
+        return dtoa_milo(dst,avail,v);
+      });
+    return *this;
+  }
   // self& operator<<(long double);
 
   self& operator<<(char v) {
@@ -363,7 +240,7 @@ class LogStream {
 class LogMessage {
  public:
   LogMessage(const char* file, int line, LogLevel lv) {
-    logstream_ << file << ':' << line << ' ' << kLogLevelStr[lv];
+    logstream_  <<file << ':' << line << ' ' << kLogLevelStr[lv];
   }
   ~LogMessage() { logstream_.flush(); }
   LogStream& stream() { return logstream_; };
