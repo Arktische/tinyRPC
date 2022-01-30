@@ -193,9 +193,9 @@ class LogStream {
     return *this;
   }
   self& operator<<(double v) {
-    if(buffer_.avail() > kMaxNumericSize)
-      buffer_.appendfx([v](char* dst, size_t avail)->size_t{
-        return dtoa_milo(dst,avail,v);
+    if (buffer_.avail() > kMaxNumericSize)
+      buffer_.appendfx([v](char* dst, size_t avail) -> size_t {
+        return dtoa_milo(dst, avail, v);
       });
     return *this;
   }
@@ -240,7 +240,7 @@ class LogStream {
 class LogMessage {
  public:
   LogMessage(const char* file, int line, LogLevel lv) {
-    logstream_  <<file << ':' << line << ' ' << kLogLevelStr[lv];
+    logstream_ << file << ':' << line << ' ' << kLogLevelStr[lv];
   }
   ~LogMessage() { logstream_.flush(); }
   LogStream& stream() { return logstream_; };

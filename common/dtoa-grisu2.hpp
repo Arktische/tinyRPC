@@ -8,8 +8,7 @@
 #include <cassert>
 #include <cstdint>
 #include <string>
-//#define UINT64_C2(h, l) \
-//  ((static_cast<uint64_t>(h) << 32) | static_cast<uint64_t>(l))
+namespace common {
 
 template <typename T1, typename T2>
 static constexpr uint64_t make_uint64(T1 h, T2 l) {
@@ -369,7 +368,7 @@ inline void Prettify(char* buffer, int length, int k) {
   }
 }
 
-inline unsigned long dtoa_milo(char* buffer,int maxlen,double value) {
+inline unsigned long dtoa_milo(char* buffer, int maxlen, double value) {
   // Not handling NaN and inf
   assert(!isnan(value));
   assert(!isinf(value));
@@ -389,4 +388,5 @@ inline unsigned long dtoa_milo(char* buffer,int maxlen,double value) {
     Prettify(buffer, length, K);
   }
 }
+}  // namespace common
 #endif  // TINYRPC_DTOA_GRISU2_HPP
