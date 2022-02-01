@@ -4,7 +4,8 @@
 #include <benchmark/benchmark.h>
 
 #include <climits>
-
+#include <random>
+#include <cstdlib>
 #include "dtoa-grisu2.hpp"
 #include "fastclock.hpp"
 #include "log.hpp"
@@ -28,7 +29,7 @@ static void bench_tinyRPC_dtoa(benchmark::State& state) {
   char buf[64];
   auto base = 1.223344556677889900112233445566778899;
   for (auto _ : state) {
-    common::dtoa_milo(buf, 48, base++);
+    common::dtoa_grisu2(buf, 48, base++);
   }
 }
 
@@ -41,13 +42,21 @@ static void bench_snprintf_dtoa(benchmark::State& state) {
 }
 
 static void bench_tinyRPC_memcpy(benchmark::State& state) {
-  char dst[1024]{'0'};
-  char src[1024]{'1'};
-  char* dst_ = dst;
-  char* src_ = src;
+  char* dst_ = (char*)malloc(1024*1024*1024);
+  char* src_ = (char*)malloc(1024*1024*1024);
+  static const unsigned memsize = 1024*1024*1024;
+  std::random_device dev;
+  std::mt19937 rng(dev());
+  std::uniform_int_distribution<std::mt19937::result_type> distoffset(0,1024*1024*1024-1); // distribution in range [1, 6]
+  std::uniform_int_distribution<std::mt19937::result_type> distsize(0,256);
   for (auto _ : state) {
+    state.PauseTiming();
+    auto doffset = distoffset(rng);
+    auto soffset = distoffset(rng);
+    auto size = distsize(rng);
+    if(soffset + size >= memsize || doffset + size >= memsize|| std::abs(doffset-soffset)<=size)
+    state.ResumeTiming();
     common::memcpy(dst_, src_, 1024);
-    std::swap(dst_, src_);
   }
 }
 

@@ -7,6 +7,7 @@
 #define TINYRPC_DTOA_GRISU2_HPP
 #include <cassert>
 #include <cstdint>
+#include <cmath>
 #include <string>
 namespace common {
 
@@ -368,7 +369,7 @@ inline void Prettify(char* buffer, int length, int k) {
   }
 }
 
-inline unsigned long dtoa_milo(char* buffer, int maxlen, double value) {
+inline unsigned long dtoa_grisu2(char* buffer, int maxlen, double value) {
   // Not handling NaN and inf
   assert(!isnan(value));
   assert(!isinf(value));

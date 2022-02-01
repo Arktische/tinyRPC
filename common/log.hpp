@@ -16,6 +16,7 @@
 #include "non-copyable.hpp"
 #include "singleton.hpp"
 #include "trait.hpp"
+#include "fastmemcpy.hpp"
 
 #define LOG(level) LogMessage(__FILE__, __LINE__, level).stream()
 
@@ -170,7 +171,7 @@ class LogStream {
   self& operator<<(double v) {
     if (buffer_.avail() > kMaxNumericSize)
       buffer_.appendfx([v](char* dst, size_t avail) -> size_t {
-        return dtoa_milo(dst, avail, v);
+        return dtoa_grisu2(dst, avail, v);
       });
     return *this;
   }
