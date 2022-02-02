@@ -2,7 +2,7 @@
 
 In this piece you will install development tools and configure the environment step by step.
 
-## Installation
+## Dev tools Installation
 
 you need install `gcc/g++`, `cmake`, `git`(optional) on your linux.
 
@@ -10,20 +10,38 @@ you need install `gcc/g++`, `cmake`, `git`(optional) on your linux.
 sudo apt install build-essential
 sudo apt install git
 sudo apt install cmake
-sudo apt install googletest
 ```
 
 After executing those commands successfully, you are ready to go :)
 
 ## Env configuration
+All the dependency are installed and configured automatically by cmake, see [CMakeLists.txt](../CMakeLists.txt) for detail.
+But you can still try it with those following commands.
 
-You can execute `setup.sh` to configure all the dev environment. Or you can follow the next few steps:
-
+**Check your OS & CPU Architecture support**
+ensure your architecture supports AVX instructions.
 ```bash
-sudo apt install googletest
-cd /usr/src/googletest/ && mkdir build && cd build
-cmake ../
+# for linux
+cat /proc/cpuinfo | grep avx
+
+# for OS X
+sysctl -a | grep machdep.cpu.features | grep AVX
+```
+**Install googletest**
+```bash
+wget -o googletest.zip https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+unzip googletest.zip
+mkdir googletest/build && cd googletest/build
+cmake ..
 make && make install
 ```
 
+**Install googlebechmark**
+```bash
+wget -o googlebenchmark.zip https://github.com/google/benchmark/archive/refs/tags/v1.6.1.zip
+unzip googlebenchmark.zip
+mkdir googlebenchmark/build && cd googlebenchmark/build
+cmake ..
+make && make install
+```
 **NOTE**:You might need `sudo` to execute those commands.
