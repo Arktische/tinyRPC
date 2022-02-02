@@ -11,39 +11,40 @@
 #include <iostream>
 #include <vector>
 
-#include "string.hpp"
 #include "fastclock.hpp"
 #include "non-copyable.hpp"
 #include "singleton.hpp"
-using cstr = const char * const;
+#include "string.hpp"
+using cstr = const char* const;
 
-static constexpr cstr past_last_slash(cstr str, cstr last_slash)
-{
-  return
-      *str == '\0' ? last_slash :
-      *str == '/'  ? past_last_slash(str + 1, str + 1) :
-                  past_last_slash(str + 1, last_slash);
+static constexpr cstr past_last_slash(cstr str, cstr last_slash) {
+  return *str == '\0'  ? last_slash
+         : *str == '/' ? past_last_slash(str + 1, str + 1)
+                       : past_last_slash(str + 1, last_slash);
 }
 
-static constexpr cstr past_last_slash(cstr str)
-{
+static constexpr cstr past_last_slash(cstr str) {
   return past_last_slash(str, str);
 }
-#define __SHORT_FILE__ ({constexpr cstr sf__ {past_last_slash(__FILE__)}; sf__;})
+#define __SHORT_FILE__                              \
+  ({                                                \
+    constexpr cstr sf__{past_last_slash(__FILE__)}; \
+    sf__;                                           \
+  })
 
 #define LOG(level) LogMessage<level>(__SHORT_FILE__, __LINE__).stream()
 
-enum Level { GLOBAL,DEBUG, INFO, WARN, ERROR, FATAL };
-template<Level LEVEL>
+enum Level { GLOBAL, DEBUG, INFO, WARN, ERROR, FATAL };
+template <Level LEVEL>
 struct LogLv;
 
-template<>
+template <>
 struct LogLv<GLOBAL> {
   static void* output;
 };
 void* LogLv<GLOBAL>::output{stdout};
 
-template<>
+template <>
 struct LogLv<DEBUG> {
   static char id[8];
   static void* output;
@@ -51,7 +52,7 @@ struct LogLv<DEBUG> {
 char LogLv<DEBUG>::id[8]{"DEBUG"};
 void* LogLv<DEBUG>::output{nullptr};
 
-template<>
+template <>
 struct LogLv<INFO> {
   static char id[8];
   static void* output;
@@ -59,7 +60,7 @@ struct LogLv<INFO> {
 char LogLv<INFO>::id[8]{"INFO"};
 void* LogLv<INFO>::output{nullptr};
 
-template<>
+template <>
 struct LogLv<WARN> {
   static char id[8];
   static void* output;
@@ -67,7 +68,7 @@ struct LogLv<WARN> {
 char LogLv<WARN>::id[8]{"WARN"};
 void* LogLv<WARN>::output{nullptr};
 
-template<>
+template <>
 struct LogLv<ERROR> {
   static char id[8];
   static void* output;
@@ -75,7 +76,7 @@ struct LogLv<ERROR> {
 char LogLv<ERROR>::id[8]{"ERROR"};
 void* LogLv<ERROR>::output{nullptr};
 
-template<>
+template <>
 struct LogLv<FATAL> {
   static char id[8];
   static void* output;
@@ -103,11 +104,11 @@ static thread_local std::aligned_storage<SIZE> gObjCache;
 template <size_t SIZE>
 class LogStreamBuffer : NonCopyable {
  public:
-  LogStreamBuffer() : data_(gLogBuf<SIZE>),cur_(gLogBuf<SIZE>) {}
-  explicit LogStreamBuffer(char* buf) :data_(buf),cur_(data_){}
+  LogStreamBuffer() : data_(gLogBuf<SIZE>), cur_(gLogBuf<SIZE>) {}
+  explicit LogStreamBuffer(char* buf) : data_(buf), cur_(data_) {}
   char* data() { return data_; }
-  inline int size() { return cur_-data_; }
-  inline int avail() { return static_cast<int>(data_+SIZE - cur_); }
+  inline int size() { return cur_ - data_; }
+  inline int avail() { return static_cast<int>(data_ + SIZE - cur_); }
   void append(const char* buf, size_t len) {
     if (static_cast<size_t>(avail()) > len) {
       memcpy(cur_, buf, len);
@@ -142,8 +143,8 @@ class LogStream {
 
  public:
   LogStream() = default;
-  self& flush(void *output) {
-    fwrite(buffer_.data(),buffer_.size(),1,(FILE*)output);
+  self& flush(void* output) {
+    fwrite(buffer_.data(), buffer_.size(), 1, (FILE*)output);
     return *this;
   }
   template <typename T>
@@ -227,10 +228,10 @@ class LogStream {
   }
 
   self& operator<<(const tm* t) {
-    buffer_.appendfx([t](char *dst,size_t avail)->size_t{
-      return strftime(dst,avail," %F %T ",t);
+    buffer_.appendfx([t](char* dst, size_t avail) -> size_t {
+      return strftime(dst, avail, " %F %T ", t);
     });
-   return *this;
+    return *this;
   }
 
  private:
@@ -238,20 +239,25 @@ class LogStream {
 };
 
 // LogMessage is an instance represents a log entry
-template<Level LEVEL>
+template <Level LEVEL>
 class LogMessage {
  public:
   LogMessage(const char* file, int line) {
-    LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)?LogLv<GLOBAL>::output:LogLv<LEVEL>::output;
-    auto ts = Singleton<FastClock<std::chrono::milliseconds>>::getInstance().Now();
-    logstream_ = new (&gObjCache<sizeof (LogStream)>) LogStream();
-    *logstream_ << localtime(&ts) <<file << ':' << line << ' '<<LogLv<LEVEL>::id<<' ';
+    LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)
+                               ? LogLv<GLOBAL>::output
+                               : LogLv<LEVEL>::output;
+    auto ts =
+        Singleton<FastClock<std::chrono::milliseconds>>::getInstance().Now();
+    logstream_ = new (&gObjCache<sizeof(LogStream)>) LogStream();
+    *logstream_ << localtime(&ts) << file << ':' << line << ' '
+                << LogLv<LEVEL>::id << ' ';
   }
   ~LogMessage() {
-    *logstream_<<'\n';
+    *logstream_ << '\n';
     logstream_->flush(LogLv<LEVEL>::output);
   }
   LogStream& stream() { return *logstream_; };
+
  private:
   LogStream* logstream_;
 };

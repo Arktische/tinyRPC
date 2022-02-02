@@ -29,7 +29,7 @@ sysctl -a | grep machdep.cpu.features | grep AVX
 ```
 **Install googletest**
 ```bash
-wget -o googletest.zip https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+wget -o googletest.zip https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
 unzip googletest.zip
 mkdir googletest/build && cd googletest/build
 cmake ..
@@ -44,4 +44,6 @@ mkdir googlebenchmark/build && cd googlebenchmark/build
 cmake ..
 make && make install
 ```
+> 🌟If you have trouble accessing github, just replace the domain with `hub.fastgit.org`. It's commonplace in mainland China, so take it easy and enjoy～
+
 **NOTE**:You might need `sudo` to execute those commands.

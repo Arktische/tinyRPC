@@ -4,11 +4,12 @@
 #include <benchmark/benchmark.h>
 
 #include <climits>
-#include <random>
 #include <cstdlib>
-#include "string.hpp"
+#include <random>
+
 #include "fastclock.hpp"
 #include "log.hpp"
+#include "string.hpp"
 static void bench_snprintf_itoa(benchmark::State& state) {
   char buf[32];
   auto base = 0xcccccccd;

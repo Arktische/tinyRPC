@@ -18,19 +18,19 @@ namespace common {
 // FastClock using intel `rdtsc` instruction to calculate time, and calibrate it
 // periodly, see https://en.wikipedia.org/wiki/Time_Stamp_Counter for more
 // detail.
-using std::chrono::system_clock;
-using std::chrono::steady_clock;
-using std::this_thread::sleep_for;
-using std::chrono::seconds;
 using std::time_t;
+using std::chrono::seconds;
+using std::chrono::steady_clock;
+using std::chrono::system_clock;
+using std::this_thread::sleep_for;
 template <class AccuracyT>
 class FastClock {
   static const size_t cache_align = hw_destructive_interference_size;
+
  public:
   time_t Now() {
     int64_t dur = (readTick() - firstTick_) * durationPerTick_;
-    return system_clock::to_time_t(startRealTime_ +
-                                                AccuracyT(dur));
+    return system_clock::to_time_t(startRealTime_ + AccuracyT(dur));
   }
 
  private:
