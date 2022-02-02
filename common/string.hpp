@@ -3,14 +3,94 @@
 // Inspired by Milo Yip's implementation
 //
 #pragma once
-#ifndef TINYRPC_DTOA_GRISU2_HPP
-#define TINYRPC_DTOA_GRISU2_HPP
+#ifndef TINYRPC_STRING_HPP
+#define TINYRPC_STRING_HPP
 #include <cassert>
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <string>
 namespace common {
+/*
+ * fast itoa & ptr to hex conversion, 3x faster on 64bit integer conversion
+ * nearly 9x faster on 32bit integer conversion than snprintf.
+ */
+template <typename T>
+struct make_unsigned_mul_integer {
+  typedef std::enable_if_t<std::is_unsigned_v<T>, uint64_t> type;
+};
 
+#if ULONG_MAX == ULONG_LONG_MAX
+template <>
+struct make_unsigned_mul_integer<unsigned long> {
+  typedef __uint128_t type;
+};
+#else
+template <>
+struct make_unsigned_mul_integer<unsigned long> {
+  typedef __uint64_t type;
+};
+#endif
+template <>
+struct make_unsigned_mul_integer<unsigned long long> {
+  typedef __uint128_t type;
+};
+
+template <typename T>
+using make_umi_t = typename make_unsigned_mul_integer<T>::type;
+static const char digits[]{"9876543210123456789"};
+static const char* zero = digits + 9;
+static_assert(sizeof(digits) == 20, "wrong number of digits");
+
+const char digitsHex[]{"0123456789abcdef"};
+static_assert(sizeof digitsHex == 17, "wrong number of digitsHex");
+
+// Efficient Integer to String Conversions, by Matthew Wilson.
+// refer to muduo, modified to support 64bit-integer
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>, void>>
+size_t itoa(char buf[], size_t maxlen, T value) {
+  static_assert(std::is_integral<T>::value,
+                "instantiated template param integerT requires integral type");
+  using uiT = std::make_unsigned_t<T>;
+  using umiT = make_umi_t<uiT>;
+  static constexpr int shift_offset = sizeof(T) * 8 + 3;
+  static constexpr auto base =
+      static_cast<uiT>((sizeof(T) <= 4) ? 0xcccccccd : 0xcccccccccccccccd);
+
+  uiT v = value > 0 ? value : -value;
+  char* ptr = buf;
+  int i;
+  for (i = 0; v != 0 && 1 < maxlen - i; i++) {
+    umiT q = (umiT)((umiT)v * base) >> shift_offset;
+    *ptr++ = zero[static_cast<int>(v - q * 10)];
+    v = q;
+  }
+  if (value < 0 && maxlen - i > 2) {
+    *ptr++ = '-';
+  }
+  *ptr = '\0';
+  std::reverse(buf, ptr);
+  return ptr - buf;
+}
+
+template <typename T, typename = std::enable_if_t<std::is_pointer_v<T>, void>>
+size_t ptrtoa(char buf[], size_t maxlen, T value) {
+  auto v = reinterpret_cast<uintptr_t>(value);
+  char* p = buf;
+  int i;
+  for (i = 0; v != 0 && 1 < maxlen - i; ++i) {
+    auto q = v >> 4;
+    *p++ = digitsHex[static_cast<int>(v - (q << 4))];
+    v = q;
+  }
+  *p = '\0';
+  std::reverse(buf, p);
+  return p - buf;
+}
+
+/*
+ * dtoa grisu2 algorithm implemention, refer to Milo Yip
+ * almost 3x faster than snprintf.
+ */
 template <typename T1, typename T2>
 static constexpr uint64_t make_uint64(T1 h, T2 l) {
   return ((static_cast<uint64_t>(h) << 32) | static_cast<uint64_t>(l));
@@ -369,7 +449,7 @@ inline void Prettify(char* buffer, int length, int k) {
   }
 }
 
-inline unsigned long dtoa_grisu2(char* buffer, int maxlen, double value) {
+inline unsigned long dtoa_grisu2(char* buffer, size_t maxlen, double value) {
   // Not handling NaN and inf
   assert(!isnan(value));
   assert(!isinf(value));
@@ -379,15 +459,18 @@ inline unsigned long dtoa_grisu2(char* buffer, int maxlen, double value) {
     buffer[1] = '.';
     buffer[2] = '0';
     buffer[3] = '\0';
-  } else {
-    if (value < 0) {
-      *buffer++ = '-';
-      value = -value;
-    }
-    int length, K;
-    Grisu2(value, buffer, &length, &K);
-    Prettify(buffer, length, K);
+    return 4;
   }
+  int strlen = 0;
+  if (value < 0) {
+    *buffer++ = '-';
+    value = -value;
+    strlen++;
+  }
+  int length, K;
+  Grisu2(value, buffer, &length, &K);
+  Prettify(buffer, length, K);
+  return strlen + length;
 }
 }  // namespace common
-#endif  // TINYRPC_DTOA_GRISU2_HPP
+#endif  // TINYRPC_STRING_HPP

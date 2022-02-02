@@ -24,29 +24,5 @@ struct function_trait<std::function<R(Args...)>> {
     typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
   };
 };
-
-template <typename T>
-struct make_unsigned_mul_integer {
-  typedef std::enable_if_t<std::is_unsigned_v<T>, uint64_t> type;
-};
-
-#if ULONG_MAX == ULONG_LONG_MAX
-template <>
-struct make_unsigned_mul_integer<unsigned long> {
-  typedef __uint128_t type;
-};
-#else
-template <>
-struct make_unsigned_mul_integer<unsigned long> {
-  typedef __uint64_t type;
-};
-#endif
-template <>
-struct make_unsigned_mul_integer<unsigned long long> {
-  typedef __uint128_t type;
-};
-
-template <typename T>
-using make_umi_t = typename make_unsigned_mul_integer<T>::type;
 }  // namespace common
 #endif  // TINYRPC_TRAIT_HPP

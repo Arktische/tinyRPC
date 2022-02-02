@@ -21,6 +21,10 @@ add_executable(
         common_bench
         common-bench.cc
 )
+target_compile_options(
+        common_bench
+        PRIVATE -O3
+)
 
 target_link_libraries(
         common_bench
