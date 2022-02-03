@@ -15,17 +15,10 @@ FetchContent_Declare(
         benchmark
         URL https://github.com/google/benchmark/archive/refs/tags/v1.6.1.zip
 )
-
-FetchContent_Declare(
-        epoll-shim
-        URL https://github.com/jiixyj/epoll-shim/archive/refs/tags/v0.0.20210418.zip
-)
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "OS: Linux")
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    message(STATUS "OS: macOS")
 else()
     message(FATAL_ERROR "Not supported platform ${CMAKE_SYSTEM_NAME}")
 endif()
@@ -36,7 +29,7 @@ else()
     message(FATAL_ERROR "Not supported arch ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 endif()
 
-FetchContent_MakeAvailable(googletest benchmark epoll-shim)
+FetchContent_MakeAvailable(googletest benchmark)
 enable_testing()
 add_subdirectory(
         common
