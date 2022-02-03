@@ -14,10 +14,6 @@
 namespace common {
 class Thread : public std::thread {
  public:
-  Thread() = default;
-
-  Thread(Thread&&) = default;
-
   template <class F, class... Args>
   Thread(const std::string_view id, F&& f, Args&&... args)
       : std::thread(

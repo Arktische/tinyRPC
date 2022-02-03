@@ -12,14 +12,20 @@
 // EchoServer
 class EchoServer : common::NonCopyable {
  public:
+  static const int kMaxConn = 1024;
   EchoServer(std::string_view host, uint16_t port);
   explicit EchoServer(int listen_fd):fd_(listen_fd){}
   int start();
 
  private:
+  void handle_rw();
+  void handle_conn();
   int fd_;
   int epfd_;
   int rw_epfd_;
+
+ private:
+  alignas(128) std::atomic<bool> running_;
 };
 
 #endif
