@@ -1,7 +1,11 @@
 #ifndef ECHO_SERVER_HPP_
 #define ECHO_SERVER_HPP_
 #include <netinet/in.h>
+#ifdef __linux__
 #include <sys/epoll.h>
+# elif defined(__APPLE__)
+#include <>
+#endif
 #include <sys/socket.h>
 
 #include <string_view>
