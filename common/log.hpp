@@ -32,7 +32,7 @@ static constexpr cstr past_last_slash(cstr str) {
     sf__;                                           \
   })
 
-#define LOG(level) LogMessage<level>(__SHORT_FILE__, __LINE__).stream()
+#define LOG(level) common::LogMessage<level>(__SHORT_FILE__, __LINE__).stream()
 
 enum Level { GLOBAL, DEBUG, INFO, WARN, ERROR, FATAL };
 template <Level LEVEL>
