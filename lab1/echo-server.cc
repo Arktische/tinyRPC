@@ -5,7 +5,10 @@
 #include "echo-server.hpp"
 
 #include <arpa/inet.h>
+#include <errno.h>
+
 #include <thread>
+
 #include <common/log.hpp>
 #include <common/thread.hpp>
 
@@ -13,7 +16,8 @@ EchoServer::EchoServer(std::string_view host, uint16_t port) : running_(false) {
   // specify the non-blocking socket
   fd_ = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
   if (fd_ == -1) {
-    LOG(FATAL) << "create socket failed";
+    LOG(FATAL) << "create socket failed"
+               << " errno: " << errno << " msg: " << strerror(errno);
     abort();
   }
   int err;
@@ -24,7 +28,8 @@ EchoServer::EchoServer(std::string_view host, uint16_t port) : running_(false) {
 
   err = bind(fd_, (struct sockaddr*)&addr, sizeof(struct sockaddr));
   if (err != 0) {
-    LOG(FATAL) << "bind sockaddr failed";
+    LOG(FATAL) << "bind sockaddr failed"
+               << " errno: " << errno << " msg: " << strerror(errno);
     abort();
   }
 }
@@ -32,32 +37,41 @@ EchoServer::EchoServer(std::string_view host, uint16_t port) : running_(false) {
 int EchoServer::start() {
   int err;
   err = listen(fd_, 1024);
-  if (err != 0) return err;
+  if (err != 0) {
+    LOG(ERROR) << " errno: " << errno << " msg: " << strerror(errno);
+    return err;
+  }
 
   epfd_ = epoll_create(1024);
-  epoll_event ls_event{EPOLLIN | EPOLLET,epoll_data_t {.fd=fd_}};
+  // LT mode to avoid loop accept
+  epoll_event ls_event{EPOLLIN, epoll_data_t{.fd = fd_}};
   err = epoll_ctl(epfd_, EPOLL_CTL_ADD, fd_, &ls_event);
   if (err != 0) return err;
 
   rw_epfd_ = epoll_create(1024);
   running_ = true;
-  common::Thread listener("listener_event_loop",&EchoServer::handle_conn, this);
-  common::Thread worker("worker_event_loop",&EchoServer::handle_rw, this);
+  common::Thread listener("listener_event_loop", &EchoServer::listenerEventLoop,
+                          this);
+  common::Thread worker("worker_event_loop", &EchoServer::workerEventLoop,
+                        this);
   return 0;
 }
 
-void EchoServer::handle_rw() {
+void EchoServer::workerEventLoop() {
   struct epoll_event ev[1024];
   int err;
   while (running_) {
-    auto nready = epoll_wait(rw_epfd_,ev,1024,0);
-    for(int i = 0; i < nready;++i) {
+    auto nready = epoll_wait(rw_epfd_, ev, 1024, 0);
+    for (int i = 0; i < nready; ++i) {
       switch (ev[i].events) {
-        case EPOLLIN:
+        case EPOLLIN:  // readable
+          on_read(ev[i].data.fd);
           break;
-        case EPOLLIN | EPOLLRDHUP:
-
-        case EPOLLOUT:
+        case EPOLLIN | EPOLLRDHUP:  // peer close
+          on_peer_close(ev[i].data.fd);
+          break;
+        case EPOLLOUT:  // writeable
+          on_write(ev[i].data.fd);
           break;
         default:
           break;
@@ -66,7 +80,7 @@ void EchoServer::handle_rw() {
   }
 }
 
-void EchoServer::handle_conn() {
+void EchoServer::listenerEventLoop() {
   struct epoll_event ev[1024];
   sockaddr_in cli_addr{};
   int addr_size = sizeof(sockaddr);
@@ -81,14 +95,22 @@ void EchoServer::handle_conn() {
                    << inet_ntoa(cli_addr.sin_addr)
                    << ";port: " << cli_addr.sin_port;
       }
-      epoll_event rw_ev{EPOLLIN|EPOLLET,epoll_data_t{.fd = conn_fd}};
-      err = epoll_ctl(rw_epfd_,EPOLL_CTL_ADD,conn_fd,&rw_ev);
-      if(err != 0) {
+      epoll_event rw_ev{EPOLLIN | EPOLLET, epoll_data_t{.fd = conn_fd}};
+      err = epoll_ctl(rw_epfd_, EPOLL_CTL_ADD, conn_fd, &rw_ev);
+      if (err != 0) {
         LOG(ERROR) << "register new connection fd to epoll failed client ip:"
                    << inet_ntoa(cli_addr.sin_addr)
                    << ";port: " << cli_addr.sin_port;
       }
     }
+  }
+}
+
+void EchoServer::on_peer_close(int connfd) {
+  int err = close(connfd);
+  if (err != 0) {
+    LOG(ERROR) << "close connfd failed"
+               << " errno: " << errno << " msg: " << strerror(errno);
   }
 }
 
