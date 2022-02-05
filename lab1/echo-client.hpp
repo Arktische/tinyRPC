@@ -14,6 +14,7 @@ class EchoClient : NonCopyable{
  static const int kMaxConn{1024};
  public:
   EchoClient(string_view host, uint16_t port);
+  int new_conn();
  private:
   void on_write(int connfd);
   void on_read(int connfd);
