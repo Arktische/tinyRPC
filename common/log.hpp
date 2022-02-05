@@ -93,19 +93,18 @@ static const int kSmallBufferSize = 1024;
 static const int kMaxNumericSize = 48;
 
 // thread local buffer for LogStream
-template <size_t SIZE>
+template <size_t SIZE,Level LV>
 static thread_local char gLogBuf[64 + SIZE] = {0};
 
 // using placement new to construct LogStream object on its memory.
-template <size_t SIZE>
+template <size_t SIZE,Level LV>
 static thread_local std::aligned_storage<SIZE> gObjCache;
 
 // LogStreamBuffer fixed size buffer
 template <size_t SIZE>
 class LogStreamBuffer : NonCopyable {
  public:
-  LogStreamBuffer() : data_(gLogBuf<SIZE>), cur_(gLogBuf<SIZE>) {}
-  explicit LogStreamBuffer(char* buf) : data_(buf), cur_(data_) {}
+  explicit LogStreamBuffer(char* buf) : data_(buf), cur_(buf) {}
   char* data() { return data_; }
   inline int size() { return cur_ - data_; }
   inline int avail() { return static_cast<int>(data_ + SIZE - cur_); }
@@ -142,7 +141,7 @@ class LogStream {
   using streamBuf = LogStreamBuffer<kSmallBufferSize>;
 
  public:
-  LogStream() = default;
+  LogStream(char* buf): buffer_(buf){}
   self& flush(void* output) {
     fwrite(buffer_.data(), buffer_.size(), 1, (FILE*)output);
     return *this;
@@ -242,24 +241,24 @@ class LogStream {
 template <Level LEVEL>
 class LogMessage {
  public:
-  LogMessage(const char* file, int line) {
+  LogMessage(const char* file, int line) : logstream_(gLogBuf<kSmallBufferSize,LEVEL>) {
     LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)
                                ? LogLv<GLOBAL>::output
                                : LogLv<LEVEL>::output;
     auto ts =
         Singleton<FastClock<std::chrono::milliseconds>>::getInstance().Now();
-    logstream_ = new (&gObjCache<sizeof(LogStream)>) LogStream();
-    *logstream_ << localtime(&ts) << file << ':' << line << ' '
+
+    logstream_ << localtime(&ts) << file << ':' << line << ' '
                 << LogLv<LEVEL>::id << ' ';
   }
   ~LogMessage() {
-    *logstream_ << '\n';
-    logstream_->flush(LogLv<LEVEL>::output);
+    logstream_ << '\n';
+    logstream_.flush(LogLv<LEVEL>::output);
   }
-  LogStream& stream() { return *logstream_; };
+  LogStream& stream() { return logstream_; };
 
  private:
-  LogStream* logstream_;
+  LogStream logstream_;
 };
 }  // namespace common
 #endif  // TINYRPC_LOG_HPP

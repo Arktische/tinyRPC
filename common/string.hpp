@@ -451,8 +451,8 @@ inline void Prettify(char* buffer, int length, int k) {
 
 inline unsigned long dtoa_grisu2(char* buffer, size_t maxlen, double value) {
   // Not handling NaN and inf
-  assert(!isnan(value));
-  assert(!isinf(value));
+  assert(!std::isnan(value));
+  assert(!std::isinf(value));
 
   if (value == 0) {
     buffer[0] = '0';

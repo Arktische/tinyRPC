@@ -54,6 +54,8 @@ int EchoServer::start() {
                           this);
   common::Thread worker("worker_event_loop", &EchoServer::workerEventLoop,
                         this);
+  listener.detach();
+  worker.join();
   return 0;
 }
 
@@ -64,11 +66,11 @@ void EchoServer::workerEventLoop() {
     auto nready = epoll_wait(rw_epfd_, ev, 1024, 0);
     for (int i = 0; i < nready; ++i) {
       switch (ev[i].events) {
+        case EPOLLRDHUP:  // peer close
+          on_peer_close(ev[i].data.fd);
+          break;
         case EPOLLIN:  // readable
           on_read(ev[i].data.fd);
-          break;
-        case EPOLLIN | EPOLLRDHUP:  // peer close
-          on_peer_close(ev[i].data.fd);
           break;
         case EPOLLOUT:  // writeable
           on_write(ev[i].data.fd);
@@ -95,7 +97,7 @@ void EchoServer::listenerEventLoop() {
                    << inet_ntoa(cli_addr.sin_addr)
                    << ";port: " << cli_addr.sin_port;
       }
-      epoll_event rw_ev{EPOLLIN | EPOLLET, epoll_data_t{.fd = conn_fd}};
+      epoll_event rw_ev{EPOLLIN |EPOLLRDHUP| EPOLLET, epoll_data_t{.fd = conn_fd}};
       err = epoll_ctl(rw_epfd_, EPOLL_CTL_ADD, conn_fd, &rw_ev);
       if (err != 0) {
         LOG(ERROR) << "register new connection fd to epoll failed client ip:"
@@ -106,12 +108,30 @@ void EchoServer::listenerEventLoop() {
   }
 }
 
+// on_peer_close
 void EchoServer::on_peer_close(int connfd) {
+  LOG(DEBUG)<<"void EchoServer::on_peer_close(int) called";
   int err = close(connfd);
   if (err != 0) {
     LOG(ERROR) << "close connfd failed"
                << " errno: " << errno << " msg: " << strerror(errno);
   }
+}
+
+// on_write
+void EchoServer::on_write(int connfd) {
+  LOG(DEBUG) << "void EchoServer::on_write(int) called";
+}
+
+// on_read
+void EchoServer::on_read(int connfd) {
+  char buf[1024];
+  int nread = read(connfd,buf,1024);
+  if(nread == EOF) {
+    LOG(INFO) <<"peer close";
+  }
+  write(connfd,buf,nread);
+  LOG(DEBUG) << "void EchoServer::on_read(int) called, data:\n"<<buf;
 }
 
 int main() {
