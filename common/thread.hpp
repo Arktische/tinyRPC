@@ -6,9 +6,7 @@
 #define TINYRPC_THREAD_HPP
 #include <functional>
 #include <thread>
-#ifdef __linux__
 #include <sys/prctl.h>
-#endif
 #include <sys/syscall.h>
 
 namespace common {

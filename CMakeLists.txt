@@ -3,8 +3,6 @@ project(tinyRPC VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-
-
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -15,7 +13,8 @@ FetchContent_Declare(
         benchmark
         URL https://github.com/google/benchmark/archive/refs/tags/v1.6.1.zip
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
+
+#For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "OS: Linux")
@@ -36,4 +35,5 @@ add_subdirectory(
 )
 add_subdirectory(lab0)
 add_subdirectory(lab1)
+add_subdirectory(codec)
 add_library(${PROJECT_NAME} tinyRPC.cc)

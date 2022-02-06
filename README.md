@@ -25,5 +25,5 @@ The whole project is divided into few steps, in each piece you will write your c
 
 * [lab0](lab0/lab0.md)
     * installation of development tools & env configuration
-* lab1
+* [lab1](lab1/lab1.md)
     * basic practice of linux networking programming with epoll.
