@@ -6,7 +6,6 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-
 #include <thread>
 
 #include <common/log.hpp>
@@ -66,7 +65,7 @@ void EchoServer::workerEventLoop() {
     auto nready = epoll_wait(rw_epfd_, ev, 1024, 0);
     for (int i = 0; i < nready; ++i) {
       switch (ev[i].events) {
-        case EPOLLRDHUP:  // peer close
+        case EPOLLRDHUP|EPOLLIN:  // peer close
           on_peer_close(ev[i].data.fd);
           break;
         case EPOLLIN:  // readable
@@ -127,11 +126,13 @@ void EchoServer::on_write(int connfd) {
 void EchoServer::on_read(int connfd) {
   char buf[1024];
   int nread = read(connfd,buf,1024);
-  if(nread == EOF) {
-    LOG(INFO) <<"peer close";
+  if(nread == 0 || nread == -1) {
+    LOG(INFO) <<"peer close, fd:"<<connfd;
+    close(connfd);
+    return;
   }
   write(connfd,buf,nread);
-  LOG(DEBUG) << "void EchoServer::on_read(int) called, data:\n"<<buf;
+  LOG(DEBUG) << "void EchoServer::on_read(int) called, fd:"<<connfd<<"nread:"<<nread;
 }
 
 int main() {
