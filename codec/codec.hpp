@@ -5,7 +5,5 @@
 #ifndef TINYRPC_CODEC_HPP
 #define TINYRPC_CODEC_HPP
 #include <iostream>
-namespace codec {
-
-}
+namespace codec {}
 #endif  // TINYRPC_CODEC_HPP

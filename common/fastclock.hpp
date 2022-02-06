@@ -38,6 +38,7 @@ class FastClock {
   alignas(cache_align) steady_clock::time_point startMonoTime_;
   alignas(cache_align) uint64_t firstTick_;
   alignas(cache_align) std::atomic<double> durationPerTick_;
+
  public:
   FastClock() {
     startRealTime_ = system_clock::now();
@@ -58,8 +59,8 @@ class FastClock {
     uint64_t tickDiff = readTick() - firstTick_;
 
     double tickPerDuration =
-        tickDiff/ std::chrono::duration_cast<AccuracyT>(duration).count();
-    durationPerTick_ = 1/tickPerDuration;
+        tickDiff / std::chrono::duration_cast<AccuracyT>(duration).count();
+    durationPerTick_ = 1 / tickPerDuration;
   }
   static uint64_t readTick() {
     uint32_t eax, edx;

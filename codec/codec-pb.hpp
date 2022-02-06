@@ -4,10 +4,11 @@
 
 #ifndef TINYRPC_CODEC_PB_HPP
 #define TINYRPC_CODEC_PB_HPP
+#include <arpa/inet.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
 #include <zlib.h>
-#include <arpa/inet.h>
+
 #include <cstdint>
 
 // refer to muduo

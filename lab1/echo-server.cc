@@ -6,6 +6,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+
 #include <thread>
 
 #include <common/log.hpp>
@@ -65,7 +66,7 @@ void EchoServer::workerEventLoop() {
     auto nready = epoll_wait(rw_epfd_, ev, 1024, 0);
     for (int i = 0; i < nready; ++i) {
       switch (ev[i].events) {
-        case EPOLLRDHUP|EPOLLIN:  // peer close
+        case EPOLLRDHUP | EPOLLIN:  // peer close
           on_peer_close(ev[i].data.fd);
           break;
         case EPOLLIN:  // readable
@@ -96,7 +97,8 @@ void EchoServer::listenerEventLoop() {
                    << inet_ntoa(cli_addr.sin_addr)
                    << ";port: " << cli_addr.sin_port;
       }
-      epoll_event rw_ev{EPOLLIN |EPOLLRDHUP| EPOLLET, epoll_data_t{.fd = conn_fd}};
+      epoll_event rw_ev{EPOLLIN | EPOLLRDHUP | EPOLLET,
+                        epoll_data_t{.fd = conn_fd}};
       err = epoll_ctl(rw_epfd_, EPOLL_CTL_ADD, conn_fd, &rw_ev);
       if (err != 0) {
         LOG(ERROR) << "register new connection fd to epoll failed client ip:"
@@ -109,7 +111,7 @@ void EchoServer::listenerEventLoop() {
 
 // on_peer_close
 void EchoServer::on_peer_close(int connfd) {
-  LOG(DEBUG)<<"void EchoServer::on_peer_close(int) called";
+  LOG(DEBUG) << "void EchoServer::on_peer_close(int) called";
   int err = close(connfd);
   if (err != 0) {
     LOG(ERROR) << "close connfd failed"
@@ -125,14 +127,15 @@ void EchoServer::on_write(int connfd) {
 // on_read
 void EchoServer::on_read(int connfd) {
   char buf[1024];
-  int nread = read(connfd,buf,1024);
-  if(nread == 0 || nread == -1) {
-    LOG(INFO) <<"peer close, fd:"<<connfd;
+  int nread = read(connfd, buf, 1024);
+  if (nread == 0 || nread == -1) {
+    LOG(INFO) << "peer close, fd:" << connfd;
     close(connfd);
     return;
   }
-  write(connfd,buf,nread);
-  LOG(DEBUG) << "void EchoServer::on_read(int) called, fd:"<<connfd<<"nread:"<<nread;
+  write(connfd, buf, nread);
+  LOG(DEBUG) << "void EchoServer::on_read(int) called, fd:" << connfd
+             << "nread:" << nread;
 }
 
 int main() {

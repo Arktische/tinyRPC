@@ -4,10 +4,11 @@
 
 #ifndef TINYRPC_THREAD_HPP
 #define TINYRPC_THREAD_HPP
-#include <functional>
-#include <thread>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
+
+#include <functional>
+#include <thread>
 
 namespace common {
 class Thread : public std::thread {

@@ -93,11 +93,11 @@ static const int kSmallBufferSize = 1024;
 static const int kMaxNumericSize = 48;
 
 // thread local buffer for LogStream
-template <size_t SIZE,Level LV>
+template <size_t SIZE, Level LV>
 static thread_local char gLogBuf[64 + SIZE] = {0};
 
 // using placement new to construct LogStream object on its memory.
-template <size_t SIZE,Level LV>
+template <size_t SIZE, Level LV>
 static thread_local std::aligned_storage<SIZE> gObjCache;
 
 // LogStreamBuffer fixed size buffer
@@ -141,7 +141,7 @@ class LogStream {
   using streamBuf = LogStreamBuffer<kSmallBufferSize>;
 
  public:
-  LogStream(char* buf): buffer_(buf){}
+  LogStream(char* buf) : buffer_(buf) {}
   self& flush(void* output) {
     fwrite(buffer_.data(), buffer_.size(), 1, (FILE*)output);
     return *this;
@@ -241,7 +241,8 @@ class LogStream {
 template <Level LEVEL>
 class LogMessage {
  public:
-  LogMessage(const char* file, int line) : logstream_(gLogBuf<kSmallBufferSize,LEVEL>) {
+  LogMessage(const char* file, int line)
+      : logstream_(gLogBuf<kSmallBufferSize, LEVEL>) {
     LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)
                                ? LogLv<GLOBAL>::output
                                : LogLv<LEVEL>::output;
@@ -249,7 +250,7 @@ class LogMessage {
         Singleton<FastClock<std::chrono::milliseconds>>::getInstance().Now();
 
     logstream_ << localtime(&ts) << file << ':' << line << ' '
-                << LogLv<LEVEL>::id << ' ';
+               << LogLv<LEVEL>::id << ' ';
   }
   ~LogMessage() {
     logstream_ << '\n';
