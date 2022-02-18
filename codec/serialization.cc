@@ -4,3 +4,4 @@
 #include <google/protobuf/descriptor.h>
 
 #include "codec-pb.hpp"
+#include <codec/codec.hpp>

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(tinyRPC VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
+find_package(Protobuf REQUIRED)
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -36,4 +36,5 @@ add_subdirectory(
 add_subdirectory(lab0)
 add_subdirectory(lab1)
 add_subdirectory(codec)
+add_subdirectory(core)
 add_library(${PROJECT_NAME} tinyRPC.cc)

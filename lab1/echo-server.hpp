@@ -5,12 +5,14 @@
 #include <sys/socket.h>
 
 #include <string_view>
-
+#include <vector>
+#include <bitset>
 #include <common/log.hpp>
 #include <common/non-copyable.hpp>
 
 using common::NonCopyable;
-
+using std::vector;
+using std::pair;
 // EchoServer
 class EchoServer : NonCopyable {
  public:
@@ -22,15 +24,14 @@ class EchoServer : NonCopyable {
  private:
   void workerEventLoop();
   void listenerEventLoop();
-  void on_read(int connfd);
-  void on_write(int connfd);
-  void on_peer_close(int connfd);
+  void onRead(int connfd);
+  void onWrite(int connfd);
+  void onPeerClose(int connfd);
   int fd_;
-  int epfd_;
-  int rw_epfd_;
+  int listenerEpfd_;
+  int workerEpfd_;
 
  private:
   alignas(128) std::atomic<bool> running_;
 };
-
 #endif

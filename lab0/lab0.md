@@ -5,12 +5,13 @@ In this piece you will install development tools and configure the environment s
 
 ## Dev tools Installation
 
-you need install `gcc/g++`, `cmake`, `git`(optional) on your linux.
+you need install `gcc/g++`, `cmake`, `git`(optional), `protoc` on your linux.
 
 ```bash
 sudo apt install build-essential
 sudo apt install git
 sudo apt install cmake
+sudo apt install protobuf-compiler
 ```
 
 After executing those commands successfully, you are ready to go :)
