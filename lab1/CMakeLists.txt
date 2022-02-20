@@ -3,8 +3,25 @@ include_directories(
         ./
         ${PROJECT_SOURCE_DIR}
 )
-add_executable(${PROJECT_NAME}_lab1 echo-server.hpp echo-server.cc)
+enable_testing()
+add_executable(echo-server echo-server.hpp echo-server.cc)
 target_link_libraries(
-        ${PROJECT_NAME}_lab1
+        echo-server
         pthread
+)
+
+add_executable(
+        echo_test
+        echo-test.cc
+        )
+target_link_libraries(
+        echo_test
+        gtest_main
+        ${GTEST_LIBRARIES}
+)
+
+include(GoogleTest)
+
+gtest_discover_tests(
+        echo_test
 )
