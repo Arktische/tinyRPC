@@ -1,5 +1,4 @@
 set(CMAKE_CXX_STANDARD 17)
-find_package(GTest REQUIRED)
 include_directories(
         ${PROJECT_SOURCE_DIR}
 )

@@ -22,11 +22,11 @@ class EchoServer : NonCopyable {
   int start();
 
  private:
-  void workerEventLoop();
-  void listenerEventLoop();
-  void onRead(int connfd);
-  void onWrite(int connfd);
-  void onPeerClose(int connfd);
+  void WorkerEventLoop();
+  void ListenerEventLoop();
+  void OnRead(int connfd);
+  void OnWrite(int connfd);
+  void OnPeerClose(int connfd);
   int fd_;
   int listenerEpfd_;
   int workerEpfd_;

@@ -6,7 +6,6 @@
 
 #include <arpa/inet.h>
 #include <cerrno>
-#include <sys/ioctl.h>
 #include <thread>
 
 #include <common/log.hpp>
@@ -50,16 +49,16 @@ int EchoServer::start() {
 
   workerEpfd_ = epoll_create(1024);
   running_ = true;
-  common::Thread listener("listener_event_loop", &EchoServer::listenerEventLoop,
+  common::Thread listener("listener_event_loop", &EchoServer::ListenerEventLoop,
                           this);
-  common::Thread worker("worker_event_loop", &EchoServer::workerEventLoop,
+  common::Thread worker("worker_event_loop", &EchoServer::WorkerEventLoop,
                         this);
   listener.detach();
   worker.join();
   return 0;
 }
 
-void EchoServer::workerEventLoop() {
+void EchoServer::WorkerEventLoop() {
   struct epoll_event ev[1024];
   int err;
   while (running_) {
@@ -67,13 +66,13 @@ void EchoServer::workerEventLoop() {
     for (int i = 0; i < nready; ++i) {
       switch (ev[i].events) {
         case EPOLLRDHUP | EPOLLIN:  // peer close
-          onPeerClose(ev[i].data.fd);
+          OnPeerClose(ev[i].data.fd);
           break;
         case EPOLLIN:  // readable
-          onRead(ev[i].data.fd);
+          OnRead(ev[i].data.fd);
           break;
         case EPOLLOUT:  // writeable
-          onWrite(ev[i].data.fd);
+          OnWrite(ev[i].data.fd);
           break;
         default:
           break;
@@ -82,7 +81,7 @@ void EchoServer::workerEventLoop() {
   }
 }
 
-void EchoServer::listenerEventLoop() {
+void EchoServer::ListenerEventLoop() {
   struct epoll_event ev[1024];
   sockaddr_in cli_addr{};
   int addr_size = sizeof(sockaddr);
@@ -110,7 +109,7 @@ void EchoServer::listenerEventLoop() {
 }
 
 // on_peer_close
-void EchoServer::onPeerClose(int connfd) {
+void EchoServer::OnPeerClose(int connfd) {
   LOG(DEBUG) << "void EchoServer::on_peer_close(int) called";
   int err = close(connfd);
   if (err != 0) {
@@ -120,12 +119,12 @@ void EchoServer::onPeerClose(int connfd) {
 }
 
 // on_write
-void EchoServer::onWrite(int connfd) {
+void EchoServer::OnWrite(int connfd) {
   LOG(DEBUG) << "void EchoServer::on_write(int) called";
 }
 
 // on_read
-void EchoServer::onRead(int connfd) {
+void EchoServer::OnRead(int connfd) {
 //  int nread;
 //  int err;
 //  err = ioctl(connfd, FIONREAD, &nread)
