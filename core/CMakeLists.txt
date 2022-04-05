@@ -8,4 +8,7 @@ include_directories(
 add_library(
         core
         buffer-pool.cc
+        link-buffer.hpp
+        tcp-stream-buffer.hpp
+        timer.hpp
 )
