@@ -30,3 +30,4 @@ The whole project is divided into few steps, in each piece you will write your c
 
 ## Open Source License Declaration
 [dota-benchmark](https://github.com/miloyip/dtoa-benchmark/blob/master/license.txt)
+[tinyrpc](https://github.com/Gooddbird/tinyrpc/blob/main/LICENSE)
