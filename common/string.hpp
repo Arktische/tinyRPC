@@ -5,12 +5,12 @@
 #pragma once
 #ifndef TINYRPC_STRING_HPP
 #define TINYRPC_STRING_HPP
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <string>
-#include <algorithm>
 #include <cstring>
+#include <string>
 namespace common {
 /*
  * fast itoa & ptr to hex conversion, 3x faster on 64bit integer conversion

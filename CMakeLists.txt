@@ -16,17 +16,17 @@ FetchContent_Declare(
 
 #For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "OS: Linux")
-else()
+else ()
     message(FATAL_ERROR "Not supported platform ${CMAKE_SYSTEM_NAME}")
-endif()
+endif ()
 
-if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+if (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
     message(STATUS "Arch: x86_64 cpu")
-else()
+else ()
     message(FATAL_ERROR "Not supported arch ${CMAKE_HOST_SYSTEM_PROCESSOR}")
-endif()
+endif ()
 
 FetchContent_MakeAvailable(googletest benchmark)
 enable_testing()

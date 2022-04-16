@@ -10,7 +10,6 @@
 #include "fastclock.hpp"
 #include "log.hpp"
 #include "thread.hpp"
-#include <common/magic/schema/schema.hpp>
 
 TEST(common, test_log) {
   using common::LogMessage;
@@ -85,6 +84,4 @@ TEST(common, profile_convert) {
   common::itoa(buf, 32, ULLONG_MAX);
 }
 
-TEST(common,test_struct_schema) {
-  
-}
+TEST(common, test_struct_schema) {}

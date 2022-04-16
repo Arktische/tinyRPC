@@ -10,7 +10,7 @@ inline int Log2Floor(size_t size) {
 #ifdef __GNUC__
   return sizeof(size_t) - 1 - __builtin_clzll(size);
 #else
-  //TODO: Complete custom implementation
+  // TODO: Complete custom implementation
 #endif
 }
 
@@ -35,17 +35,14 @@ int AlignmentForSize(size_t size) {
 }
 
 int ClassIndex(size_t s) {
-  if(s <= 1024) return (s+7)>>3;
-  else if(s <= kMaxSmallAllocSize) return (s+127+(120<<7))>>7;
+  if (s <= 1024)
+    return (s + 7) >> 3;
+  else if (s <= kMaxSmallAllocSize)
+    return (s + 127 + (120 << 7)) >> 7;
   return 0;
 }
 
-char* ThreadCache::get(size_t size) {
+char* ThreadCache::get(size_t size) { return nullptr; }
 
-  return nullptr;
-}
-
-void ThreadCache::put(char* buf) {
-
-}
-}
+void ThreadCache::put(char* buf) {}
+}  // namespace core

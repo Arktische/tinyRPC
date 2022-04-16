@@ -5,6 +5,7 @@
 #include "echo_server.hpp"
 
 #include <arpa/inet.h>
+
 #include <cerrno>
 #include <thread>
 
@@ -125,9 +126,9 @@ void EchoServer::OnWrite(int connfd) {
 
 // on_read
 void EchoServer::OnRead(int connfd) {
-//  int nread;
-//  int err;
-//  err = ioctl(connfd, FIONREAD, &nread)
+  //  int nread;
+  //  int err;
+  //  err = ioctl(connfd, FIONREAD, &nread)
   char buf[1024];
   int nread = read(connfd, buf, 1024);
   if (nread == 0 || nread == -1) {

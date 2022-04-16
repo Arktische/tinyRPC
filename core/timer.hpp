@@ -5,8 +5,6 @@
 #ifndef TINYRPC_TIMER_HPP
 #define TINYRPC_TIMER_HPP
 
-namespace core {
-
-}
+namespace core {}
 
 #endif  // TINYRPC_TIMER_HPP

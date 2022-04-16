@@ -13,7 +13,7 @@ target_link_libraries(
 add_executable(
         echo_test
         echo-test.cc
-        )
+)
 target_link_libraries(
         echo_test
         gtest_main

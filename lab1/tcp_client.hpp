@@ -6,22 +6,24 @@
 #define TINYRPC_TCP_CLIENT_HPP
 //#include <vector>
 #include <list>
-#include <common/noncopyable.hpp>
 #include <string_view>
-namespace lab1{
-using std::list;
+
+#include <common/noncopyable.hpp>
+namespace lab1 {
 using common::NonCopyable;
+using std::list;
 using std::string_view;
-class TcpClient : NonCopyable{
+class TcpClient : NonCopyable {
  public:
   TcpClient();
   TcpClient(int epfd);
   ~TcpClient();
 
-  int Connect(std::pair<string_view ,uint16_t>);
+  int Connect(std::pair<string_view, uint16_t>);
+
  private:
   int ep_fd_;
   list<int> conn_fd_;
 };
-}
+}  // namespace lab1
 #endif  // TINYRPC_TCP_CLIENT_HPP

@@ -46,8 +46,9 @@ class Coroutine {
   coctx m_coctx;        // 协程寄存器上下文
   int m_stack_size{0};  // 协程申请堆空间的栈大小,单位: 字节
   char* m_stack_sp{nullptr};  //
-  bool m_is_in_cofunc{false};  // 是否开始执行。只要协程进入CoFunction就变为true,
-                               // CoFunction执行完变为false
+  bool m_is_in_cofunc{
+      false};  // 是否开始执行。只要协程进入CoFunction就变为true,
+               // CoFunction执行完变为false
 
  public:
   std::function<void()> m_call_back;  // 协程回调函数

@@ -1,4 +1,5 @@
 # 实验0
+
 [English version](lab0.md)
 
 在这个小节中将会安装必要的开发工具并配置好环境。
@@ -16,6 +17,7 @@ sudo apt install cmake
 执行完这些linux命令后如果没有报错，则说明安装成功，可以开始正式做实验了。
 
 ## 环境配置
+
 所有的依赖项都在项目根目录下的CMakeLists.txt中安装并配置好了，理论上不需要额外操作。如果你想体验配置的过程，或者cmake配置过程中报错了，可以执行下面的命令。
 
 **检查OS和AVX指令支持**
@@ -26,6 +28,7 @@ cat /proc/cpuinfo | grep avx
 ```
 
 **安装googletest**
+
 ```bash
 wget -o googletest.zip https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
 unzip googletest.zip
@@ -35,6 +38,7 @@ make && make install
 ```
 
 **安装googlebenchmark**
+
 ```bash
 wget -o googlebenchmark.zip https://github.com/google/benchmark/archive/refs/tags/v1.6.1.zip
 unzip googlebenchmark.zip

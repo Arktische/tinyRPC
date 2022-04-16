@@ -4,15 +4,16 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 
+#include <bitset>
 #include <string_view>
 #include <vector>
-#include <bitset>
+
 #include <common/log.hpp>
 #include <common/noncopyable.hpp>
 
 using common::NonCopyable;
-using std::vector;
 using std::pair;
+using std::vector;
 // EchoServer
 class EchoServer : NonCopyable {
  public:

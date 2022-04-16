@@ -4,7 +4,5 @@
 
 #ifndef TINYRPC_TCP_STREAM_BUFFER_HPP
 #define TINYRPC_TCP_STREAM_BUFFER_HPP
-namespace core {
-
-}
+namespace core {}
 #endif  // TINYRPC_TCP_STREAM_BUFFER_HPP
