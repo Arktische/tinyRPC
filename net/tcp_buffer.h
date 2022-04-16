@@ -1,20 +1,17 @@
 #ifndef TINYRPC_NET_TCP_TCP_BUFFER_H
 #define TINYRPC_NET_TCP_TCP_BUFFER_H
 
-#include <vector>
 #include <memory>
-
+#include <vector>
 
 namespace net {
 
-
 class TcpBuffer {
- 
  public:
   typedef std::shared_ptr<TcpBuffer> ptr;
 
   explicit TcpBuffer(int size);
-  
+
   ~TcpBuffer();
 
   int readAble();
@@ -48,20 +45,14 @@ class TcpBuffer {
   void adjustBuffer();
 
  private:
-
-  int m_read_index {0};
-  int m_write_index {0};
-  int m_size {0};
+  int m_read_index{0};
+  int m_write_index{0};
+  int m_size{0};
 
  public:
   std::vector<char> m_buffer;
-
 };
 
-
-
-}
-
-
+}  // namespace net
 
 #endif

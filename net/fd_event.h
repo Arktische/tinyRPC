@@ -1,31 +1,33 @@
 #ifndef TINYRPC_NET_FD_EVNET_H
 #define TINYRPC_NET_FD_EVNET_H
 
-#include <functional>
-#include <memory>
-#include <sys/socket.h>
-#include <sys/epoll.h>
-#include <cassert>
-#include "reactor.h"
-#include <common/log.hpp>
 #include <coroutine/coroutine.h>
 #include <net/mutex.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+
+#include <cassert>
+#include <functional>
+#include <memory>
+
+#include <common/log.hpp>
+
+#include "reactor.h"
 
 namespace net {
 
 class Reactor;
 
 enum IOEvent {
-  READ = EPOLLIN,	
-  WRITE = EPOLLOUT,  
+  READ = EPOLLIN,
+  WRITE = EPOLLOUT,
   ETModel = EPOLLET,
 };
 
 class FdEvent : public std::enable_shared_from_this<FdEvent> {
  public:
-
   typedef std::shared_ptr<FdEvent> ptr;
-  
+
   FdEvent(Reactor* reactor, int fd = -1);
 
   FdEvent(int fd);
@@ -44,7 +46,7 @@ class FdEvent : public std::enable_shared_from_this<FdEvent> {
 
   void updateToReactor();
 
-  void unregisterFromReactor ();
+  void unregisterFromReactor();
 
   int getFd() const;
 
@@ -52,36 +54,33 @@ class FdEvent : public std::enable_shared_from_this<FdEvent> {
 
   int getListenEvents() const;
 
-	Reactor* getReactor() const;
+  Reactor* getReactor() const;
 
   void setReactor(Reactor* r);
 
   void setNonBlock();
-  
+
   bool isNonBlock();
 
  public:
-	Mutex m_mutex;
+  Mutex m_mutex;
 
  protected:
-  int m_fd {-1};
+  int m_fd{-1};
   std::function<void()> m_read_callback;
   std::function<void()> m_write_callback;
-  
-  int m_listen_events {0};
-	int m_current_events {0};
 
-  Reactor* m_reactor {nullptr};
+  int m_listen_events{0};
+  int m_current_events{0};
 
+  Reactor* m_reactor{nullptr};
 };
 
-
 class FdEventContainer {
-
  public:
   FdEventContainer(int size);
 
-  FdEvent::ptr getFdEvent(int fd); 
+  FdEvent::ptr getFdEvent(int fd);
 
  public:
   static FdEventContainer* GetFdContainer();
@@ -89,9 +88,8 @@ class FdEventContainer {
  private:
   RWMutex m_mutex;
   std::vector<FdEvent::ptr> m_fds;
-
 };
 
-}
+}  // namespace net
 
 #endif

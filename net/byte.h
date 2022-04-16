@@ -1,9 +1,9 @@
 #ifndef TINYRPC_NET_BYTE_H
 #define TINYRPC_NET_BYTE_H
 
+#include <arpa/inet.h>
 #include <stdint.h>
 #include <string.h>
-#include <arpa/inet.h>
 
 namespace net {
 
@@ -13,8 +13,6 @@ int32_t getInt32FromNetByte(const char* buf) {
   return ntohl(tmp);
 }
 
-
-
-}
+}  // namespace net
 
 #endif

@@ -1,8 +1,11 @@
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <atomic>
 #include "coroutine.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <atomic>
+
 #include "common/log.hpp"
 
 namespace common {
@@ -18,13 +21,10 @@ static thread_local int t_coroutine_count = 0;
 
 static thread_local int t_cur_coroutine_id = 0;
 
-int getCoroutineIndex() {
-  return t_cur_coroutine_id;
-}
+int getCoroutineIndex() { return t_cur_coroutine_id; }
 
 void CoFunction(Coroutine* co) {
-
-  if (co!= nullptr) {
+  if (co != nullptr) {
     co->setIsInCoFunc(true);
 
     // 去执行协程回调函数
@@ -44,13 +44,12 @@ Coroutine::Coroutine() {
 }
 
 Coroutine::Coroutine(int size) : m_stack_size(size) {
-
   if (t_main_coroutine == nullptr) {
     t_main_coroutine = new Coroutine();
   }
   assert(t_main_coroutine != nullptr);
 
-  m_stack_sp =  reinterpret_cast<char*>(malloc(m_stack_size));
+  m_stack_sp = reinterpret_cast<char*>(malloc(m_stack_size));
   assert(m_stack_sp != nullptr);
 
   m_cor_id = t_cur_coroutine_id++;
@@ -58,15 +57,13 @@ Coroutine::Coroutine(int size) : m_stack_size(size) {
   // DebugLog << "coroutine[null callback] created, id[" << m_cor_id << "]";
 }
 
-Coroutine::Coroutine(int size, std::function<void()> cb)
-  : m_stack_size(size) {
-
+Coroutine::Coroutine(int size, std::function<void()> cb) : m_stack_size(size) {
   if (t_main_coroutine == nullptr) {
     t_main_coroutine = new Coroutine();
   }
   assert(t_main_coroutine != nullptr);
 
-  m_stack_sp =  reinterpret_cast<char*>(malloc(m_stack_size));
+  m_stack_sp = reinterpret_cast<char*>(malloc(m_stack_size));
   assert(m_stack_sp != nullptr);
 
   setCallBack(cb);
@@ -76,9 +73,8 @@ Coroutine::Coroutine(int size, std::function<void()> cb)
 }
 
 bool Coroutine::setCallBack(std::function<void()> cb) {
-
   if (this == t_main_coroutine) {
-    LOG(ERROR)<< "main coroutine can't set callback";
+    LOG(ERROR) << "main coroutine can't set callback";
     return false;
   }
   if (m_is_in_cofunc) {
@@ -100,11 +96,10 @@ bool Coroutine::setCallBack(std::function<void()> cb) {
 
   m_coctx.regs[kRSP] = top;
   m_coctx.regs[kRBP] = top;
-  m_coctx.regs[kRETAddr] = reinterpret_cast<char*>(CoFunction); 
+  m_coctx.regs[kRETAddr] = reinterpret_cast<char*>(CoFunction);
   m_coctx.regs[kRDI] = reinterpret_cast<char*>(this);
 
   return true;
-
 }
 
 Coroutine::~Coroutine() {
@@ -114,7 +109,7 @@ Coroutine::~Coroutine() {
     free(m_stack_sp);
     m_stack_sp = nullptr;
   }
-  LOG(DEBUG)<< "coroutine[" << m_cor_id << "] die";
+  LOG(DEBUG) << "coroutine[" << m_cor_id << "] die";
 }
 
 Coroutine* Coroutine::GetCurrentCoroutine() {
@@ -155,7 +150,6 @@ void Coroutine::Yield() {
 取得执行权,从主协程切换到目标协程
 ********/
 void Coroutine::Resume(Coroutine* co) {
-
   if (t_cur_coroutine != t_main_coroutine) {
     LOG(ERROR) << "swap error, current coroutine must be main coroutine";
     return;
@@ -172,7 +166,6 @@ void Coroutine::Resume(Coroutine* co) {
   t_cur_coroutine = co;
   coctx_swap(&(t_main_coroutine->m_coctx), &(co->m_coctx));
   // DebugLog << "swap back";
-
 }
 
-}
+}  // namespace common

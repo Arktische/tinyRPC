@@ -3,10 +3,12 @@
 
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <vector>
+
 #include <atomic>
-#include <map>
 #include <functional>
+#include <map>
+#include <vector>
+
 #include "../coroutine/coroutine.h"
 #include "fd_event.h"
 #include "mutex.h"
@@ -19,9 +21,7 @@ class Timer;
 // typedef std::shared_ptr<Timer> TimerPtr;
 
 class Reactor {
-
  public:
-
   typedef std::shared_ptr<Reactor> ptr;
 
   explicit Reactor();
@@ -35,11 +35,11 @@ class Reactor {
   void addTask(std::function<void()> task, bool is_wakeup = true);
 
   void addTask(std::vector<std::function<void()>> task, bool is_wakeup = true);
-  
+
   void addCoroutine(common::Coroutine::ptr cor, bool is_wakeup = true);
 
   void wakeup();
-  
+
   void loop();
 
   void stop();
@@ -47,13 +47,11 @@ class Reactor {
   Timer* getTimer();
 
   pid_t getTid();
- 
+
  public:
   static Reactor* GetReactor();
-  
 
  private:
-
   void addWakeupFd();
 
   bool isLoopThread() const;
@@ -61,20 +59,20 @@ class Reactor {
   void addEventInLoopThread(int fd, epoll_event event);
 
   void delEventInLoopThread(int fd);
-  
- private:
-  int m_epfd {-1};
-  int m_wake_fd {-1};         // wakeup fd
-  int m_timer_fd {-1};        // timer fd
-  bool m_stop_flag {false};
-  bool m_is_looping {false};
-  bool m_is_init_timer {false};
-  pid_t m_tid {0};        // thread id
 
-  Mutex m_mutex;                    // mutex
-  
-  std::vector<int> m_fds;              // alrady care events
-  std::atomic<int> m_fd_size; 
+ private:
+  int m_epfd{-1};
+  int m_wake_fd{-1};   // wakeup fd
+  int m_timer_fd{-1};  // timer fd
+  bool m_stop_flag{false};
+  bool m_is_looping{false};
+  bool m_is_init_timer{false};
+  pid_t m_tid{0};  // thread id
+
+  Mutex m_mutex;  // mutex
+
+  std::vector<int> m_fds;  // alrady care events
+  std::atomic<int> m_fd_size;
 
   // fds that wait for operate
   // 1 -- to add to loop
@@ -84,11 +82,8 @@ class Reactor {
   std::vector<std::function<void()>> m_pending_tasks;
 
   Timer* m_timer;
-
 };
 
-
-}
-
+}  // namespace net
 
 #endif

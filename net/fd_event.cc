@@ -1,26 +1,25 @@
+#include "fd_event.h"
+
 #include <fcntl.h>
 #include <unistd.h>
-#include "fd_event.h"
 
 namespace net {
 
 static FdEventContainer* g_FdContainer = nullptr;
 
-FdEvent::FdEvent(Reactor* reactor, int fd/*=-1*/) : m_fd(fd), m_reactor(reactor) {
-    if (reactor == nullptr) {
-      LOG(ERROR) << "create reactor first";
-    }
-    assert(reactor != nullptr);
+FdEvent::FdEvent(Reactor* reactor, int fd /*=-1*/)
+    : m_fd(fd), m_reactor(reactor) {
+  if (reactor == nullptr) {
+    LOG(ERROR) << "create reactor first";
+  }
+  assert(reactor != nullptr);
 }
 
-FdEvent::FdEvent(int fd) : m_fd(fd) {
-
-}
+FdEvent::FdEvent(int fd) : m_fd(fd) {}
 
 FdEvent::~FdEvent() {}
 
 void FdEvent::handleEvent(int flag) {
-
   if (flag == READ) {
     m_read_callback();
   } else if (flag == WRITE) {
@@ -28,7 +27,6 @@ void FdEvent::handleEvent(int flag) {
   } else {
     LOG(ERROR) << "error flag";
   }
-
 }
 
 void FdEvent::setCallBack(IOEvent flag, std::function<void()> cb) {
@@ -68,66 +66,54 @@ void FdEvent::delListenEvents(IOEvent event) {
     return;
   }
   LOG(ERROR) << "this event not exist, skip";
-
 }
 
 void FdEvent::updateToReactor() {
-
   epoll_event event;
   event.events = m_listen_events;
   event.data.ptr = this;
-  // DebugLog << "reactor = " << m_reactor << "log m_tid =" << m_reactor->getTid();
+  // DebugLog << "reactor = " << m_reactor << "log m_tid =" <<
+  // m_reactor->getTid();
 
   m_reactor->addEvent(m_fd, event);
 }
 
-void FdEvent::unregisterFromReactor () {
+void FdEvent::unregisterFromReactor() {
   m_reactor->delEvent(m_fd);
   m_listen_events = 0;
   m_read_callback = nullptr;
   m_write_callback = nullptr;
 }
 
-int FdEvent::getFd() const {
-  return m_fd;
-}
+int FdEvent::getFd() const { return m_fd; }
 
-void FdEvent::setFd(const int fd) {
-  m_fd = fd;
-}
+void FdEvent::setFd(const int fd) { m_fd = fd; }
 
-int FdEvent::getListenEvents() const {
-  return m_listen_events; 
-}
+int FdEvent::getListenEvents() const { return m_listen_events; }
 
-Reactor* FdEvent::getReactor() const {
-  return m_reactor;
-}
+Reactor* FdEvent::getReactor() const { return m_reactor; }
 
-void FdEvent::setReactor(Reactor* r) {
-  m_reactor = r;
-}
+void FdEvent::setReactor(Reactor* r) { m_reactor = r; }
 
 void FdEvent::setNonBlock() {
   if (m_fd == -1) {
-    LOG(ERROR)<< "error, fd=-1";
+    LOG(ERROR) << "error, fd=-1";
     return;
   }
 
-  int flag = fcntl(m_fd, F_GETFL, 0); 
+  int flag = fcntl(m_fd, F_GETFL, 0);
   if (flag & O_NONBLOCK) {
-    LOG(DEBUG)<< "fd already set o_nonblock";
+    LOG(DEBUG) << "fd already set o_nonblock";
     return;
   }
 
   fcntl(m_fd, F_SETFL, flag | O_NONBLOCK);
-  flag = fcntl(m_fd, F_GETFL, 0); 
+  flag = fcntl(m_fd, F_GETFL, 0);
   if (flag & O_NONBLOCK) {
     LOG(DEBUG) << "succ set o_nonblock";
   } else {
     LOG(ERROR) << "set o_nonblock error";
   }
-
 }
 
 bool FdEvent::isNonBlock() {
@@ -135,9 +121,8 @@ bool FdEvent::isNonBlock() {
     LOG(ERROR) << "error, fd=-1";
     return false;
   }
-  int flag = fcntl(m_fd, F_GETFL, 0); 
+  int flag = fcntl(m_fd, F_GETFL, 0);
   return (flag & O_NONBLOCK);
-
 }
 
 FdEvent::ptr FdEventContainer::getFdEvent(int fd) {
@@ -160,23 +145,20 @@ FdEvent::ptr FdEventContainer::getFdEvent(int fd) {
   m_fds.swap(tmps);
   lock.unlock();
   return re;
-
 }
 
 FdEventContainer::FdEventContainer(int size) {
-  for(int i = 0; i < size; ++i) {
+  for (int i = 0; i < size; ++i) {
     FdEvent::ptr p = std::make_shared<FdEvent>(i);
     m_fds.push_back(p);
   }
-
 }
 
 FdEventContainer* FdEventContainer::GetFdContainer() {
   if (g_FdContainer == nullptr) {
-    g_FdContainer = new FdEventContainer(128); 
+    g_FdContainer = new FdEventContainer(128);
   }
   return g_FdContainer;
 }
 
-
-}
+}  // namespace net

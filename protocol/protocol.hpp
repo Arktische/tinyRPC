@@ -9,33 +9,26 @@
 #include <system_error>
 
 class Context {};
-class Archive{};
-template<typename codecT>
+class Archive {};
+template <typename codecT>
 class Protocol {
-  public:
+ public:
+  template <typename requestT, typename responseT>
+  using handlerFxT =
+      std::function<std::error_code(Context&, requestT&, responseT&)>&;
 
-  template<typename requestT, typename responseT>
-  using handlerFxT = std::function<std::error_code(Context&,requestT&,responseT&)>&;
-
-  template<typename requestT, typename responseT>
+  template <typename requestT, typename responseT>
   static void Bind(handlerFxT<requestT, responseT> handler) {
     return *this;
   }
-  
-  template<typename streamT,typename requestT, typename responseT>
-   handlerFxT<requestT, responseT> Process(streamT stream) {
-     
-  }
 
-  
+  template <typename streamT, typename requestT, typename responseT>
+  handlerFxT<requestT, responseT> Process(streamT stream) {}
 
-  private:
+ private:
   static codecT codec_;
 };
 
-void skeleton() {
-  Protocol<Archive> proto_manager;
-}
-
+void skeleton() { Protocol<Archive> proto_manager; }
 
 #endif  // TINYRPC_PROTOCOL_HPP

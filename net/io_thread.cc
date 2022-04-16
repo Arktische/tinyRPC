@@ -1,12 +1,13 @@
-#include <memory>
-#include <map>
-#include "reactor.h"
 #include "io_thread.h"
-#include "tcp_connection.h"
-#include "tcp_server.h"
-#include "tcp_connection_time_wheel.h"
-#include "coroutine/coroutine.h"
 
+#include <map>
+#include <memory>
+
+#include "coroutine/coroutine.h"
+#include "reactor.h"
+#include "tcp_connection.h"
+#include "tcp_connection_time_wheel.h"
+#include "tcp_server.h"
 
 namespace net {
 
@@ -21,31 +22,27 @@ IOThread::~IOThread() {
   pthread_join(m_thread, nullptr);
 
   if (m_reactor != nullptr) {
-
     delete m_reactor;
     m_reactor = nullptr;
   }
 }
 
-Reactor* IOThread::getReactor() {
-  return m_reactor;
-}
+Reactor* IOThread::getReactor() { return m_reactor; }
 
-TcpTimeWheel::ptr IOThread::getTimeWheel() {
-  return m_time_wheel;
-}
+TcpTimeWheel::ptr IOThread::getTimeWheel() { return m_time_wheel; }
 
 void* IOThread::main(void* arg) {
   assert(t_reactor_ptr == nullptr);
-  t_reactor_ptr = new Reactor(); 
+  t_reactor_ptr = new Reactor();
   IOThread* thread = static_cast<IOThread*>(arg);
   thread->m_reactor = t_reactor_ptr;
 
-  thread->m_timer_event = std::make_shared<TimerEvent>(10000, true, 
-    std::bind(&IOThread::MainLoopTimerFunc, thread));
-  
+  thread->m_timer_event = std::make_shared<TimerEvent>(
+      10000, true, std::bind(&IOThread::MainLoopTimerFunc, thread));
+
   thread->getReactor()->getTimer()->addTimerEvent(thread->m_timer_event);
-  thread->m_time_wheel = std::make_shared<TcpTimeWheel>(thread->m_reactor, 2, 10);
+  thread->m_time_wheel =
+      std::make_shared<TcpTimeWheel>(thread->m_reactor, 2, 10);
 
   common::Coroutine::GetCurrentCoroutine();
 
@@ -55,49 +52,49 @@ void* IOThread::main(void* arg) {
 }
 
 bool IOThread::addClient(TcpServer* tcp_svr, int fd) {
-
   auto it = m_clients.find(fd);
   if (it != m_clients.end()) {
     TcpConnection::ptr s_conn = it->second;
     if (s_conn && s_conn.use_count() > 0 && s_conn->getState() != Closed) {
-      LOG(ERROR) << "insert error, this fd of TcpConection exist and state not Closed";
+      LOG(ERROR)
+          << "insert error, this fd of TcpConection exist and state not Closed";
       return false;
     }
     // src Tcpconnection can delete
     s_conn.reset();
-		it->second.reset();
-    // set new Tcpconnection	
-		it->second = std::make_shared<TcpConnection>(tcp_svr, this, fd, 128, tcp_svr->getPeerAddr());
+    it->second.reset();
+    // set new Tcpconnection
+    it->second = std::make_shared<TcpConnection>(tcp_svr, this, fd, 128,
+                                                 tcp_svr->getPeerAddr());
     it->second->registerToTimeWheel();
 
   } else {
-    TcpConnection::ptr conn = std::make_shared<TcpConnection>(tcp_svr, this, fd, 128, tcp_svr->getPeerAddr()); 
+    TcpConnection::ptr conn = std::make_shared<TcpConnection>(
+        tcp_svr, this, fd, 128, tcp_svr->getPeerAddr());
     m_clients.insert(std::make_pair(fd, conn));
     conn->registerToTimeWheel();
-    
   }
   return true;
 }
 
 void IOThread::MainLoopTimerFunc() {
   LOG(DEBUG) << "this IOThread loop timer excute";
-  
+
   // delete Closed TcpConnection per loop
   // for free memory
-	LOG(DEBUG) << "m_clients.size=" << m_clients.size();
-  for (auto &i : m_clients) {
+  LOG(DEBUG) << "m_clients.size=" << m_clients.size();
+  for (auto& i : m_clients) {
     // TcpConnection::ptr s_conn = i.second;
-		// DebugLog << "state = " << s_conn->getState();
-    if (i.second && i.second.use_count() > 0 && i.second->getState() == Closed) {
+    // DebugLog << "state = " << s_conn->getState();
+    if (i.second && i.second.use_count() > 0 &&
+        i.second->getState() == Closed) {
       // need to delete TcpConnection
-      LOG(DEBUG)<< "TcpConection [fd:" << i.first << "] will delete";
+      LOG(DEBUG) << "TcpConection [fd:" << i.first << "] will delete";
       (i.second).reset();
       // s_conn.reset();
     }
-	
   }
 }
-
 
 IOThreadPool::IOThreadPool(int size) : m_size(size) {
   m_io_threads.resize(size);
@@ -113,5 +110,4 @@ IOThread* IOThreadPool::getIOThread() {
   return m_io_threads[m_index++].get();
 }
 
-
-}
+}  // namespace net

@@ -4,24 +4,19 @@
 
 #ifndef TINYRPC_CODEC_HPP
 #define TINYRPC_CODEC_HPP
-#include <iostream>
-#include <string_view>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
+
+#include <iostream>
+#include <string_view>
 namespace codec {
-template<typename messageT>
+template <typename messageT>
 struct Codec {
-  std::string encode(messageT&) {
-
-  }
-  messageT* decode(std::string_view) {
-
-  }
+  std::string encode(messageT&) {}
+  messageT* decode(std::string_view) {}
 };
 
-template<>
-struct Codec<google::protobuf::Message> {
-
-};
-}
+template <>
+struct Codec<google::protobuf::Message> {};
+}  // namespace codec
 #endif  // TINYRPC_CODEC_HPP

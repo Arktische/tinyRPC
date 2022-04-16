@@ -1,8 +1,10 @@
 #ifndef TINYRPC_NET_TCP_TCP_CLIENT_H
 #define TINYRPC_NET_TCP_TCP_CLIENT_H
 
-#include <memory>
 #include <google/protobuf/service.h>
+
+#include <memory>
+
 #include "coroutine/coroutine.h"
 #include "coroutine/coroutine_hook.h"
 #include "net_address.h"
@@ -29,33 +31,26 @@ class TcpClient {
 
   void setTimeout(const int v) {
     m_max_timeout = v;
-    setMaxTimeOut(v); 
+    setMaxTimeOut(v);
   }
 
-  void setTryCounts(const int v) {
-    m_try_counts = v;
-  }
-
+  void setTryCounts(const int v) { m_try_counts = v; }
 
  private:
-
   int m_family;
-  int m_fd {-1};
-  int m_try_counts {3};         // max try reconnect times
-  int m_max_timeout {5};       // max connect timeout, s
-  bool m_is_stop {false};
+  int m_fd{-1};
+  int m_try_counts{3};   // max try reconnect times
+  int m_max_timeout{5};  // max connect timeout, s
+  bool m_is_stop{false};
 
-  NetAddress::ptr m_local_addr {nullptr};
-  NetAddress::ptr m_peer_addr {nullptr};
-  Reactor* m_reactor {nullptr};
-  TcpConnection::ptr m_connection {nullptr};
+  NetAddress::ptr m_local_addr{nullptr};
+  NetAddress::ptr m_peer_addr{nullptr};
+  Reactor* m_reactor{nullptr};
+  TcpConnection::ptr m_connection{nullptr};
 
-  bool m_connect_succ {false};
+  bool m_connect_succ{false};
+};
 
-}; 
-
-}
-
-
+}  // namespace net
 
 #endif

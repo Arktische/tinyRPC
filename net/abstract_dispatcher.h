@@ -15,7 +15,6 @@ class AbstractDispatcher {
   virtual void dispatch(AbstractData* data, TcpConnection* conn) = 0;
 };
 
-}
-
+}  // namespace net
 
 #endif

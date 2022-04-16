@@ -11,14 +11,13 @@ enum CodeCType {
 class AbstractData {
  public:
   AbstractData() {}
-  virtual ~AbstractData() {};
+  virtual ~AbstractData(){};
   virtual CodeCType type() const = 0;
 
-  bool decode_succ {false};
-  bool encode_succ {false};
+  bool decode_succ{false};
+  bool encode_succ{false};
 };
 
-
-}
+}  // namespace net
 
 #endif

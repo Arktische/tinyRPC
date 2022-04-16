@@ -1,22 +1,23 @@
-#include <sys/timerfd.h>
+#include "timer.h"
+
 #include <assert.h>
-#include <time.h>
 #include <string.h>
-#include <vector>
 #include <sys/time.h>
+#include <sys/timerfd.h>
+#include <time.h>
+
 #include <functional>
 #include <map>
-#include "common/log.hpp"
-#include "timer.h"
-#include "mutex.h"
-#include "fd_event.h"
-#include "coroutine/coroutine_hook.h"
+#include <vector>
 
+#include "common/log.hpp"
+#include "coroutine/coroutine_hook.h"
+#include "fd_event.h"
+#include "mutex.h"
 
 extern read_fun_ptr_t g_sys_read_fun;  // sys read func
 
 namespace net {
-
 
 int64_t getNowMs() {
   timeval val;
@@ -26,31 +27,28 @@ int64_t getNowMs() {
 }
 
 Timer::Timer(Reactor* reactor) : FdEvent(reactor) {
-
-  m_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC);
-  LOG(DEBUG)<< "m_timer fd = " << m_fd;
+  m_fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+  LOG(DEBUG) << "m_timer fd = " << m_fd;
   if (m_fd == -1) {
     LOG(DEBUG) << "timerfd_create error";
   }
   // DebugLog << "timerfd is [" << m_fd << "]";
-	m_read_callback = std::bind(&Timer::onTimer, this);
+  m_read_callback = std::bind(&Timer::onTimer, this);
   addListenEvents(READ);
   // updateToReactor();
-
 }
 
 Timer::~Timer() {
   unregisterFromReactor();
-	close(m_fd);
+  close(m_fd);
 }
-
 
 void Timer::addTimerEvent(TimerEvent::ptr event, bool need_reset /*=true*/) {
   bool is_reset = false;
   if (m_pending_events.empty()) {
     is_reset = true;
   } else {
-		auto it = m_pending_events.begin();
+    auto it = m_pending_events.begin();
     if (event->m_arrive_time < (*it).second->m_arrive_time) {
       is_reset = true;
     }
@@ -77,14 +75,14 @@ void Timer::resetArriveTime() {
   int64_t now = getNowMs();
   auto it = m_pending_events.begin();
   if ((*it).first < now) {
-    LOG(DEBUG)<< "all timer events has already expire";
+    LOG(DEBUG) << "all timer events has already expire";
     return;
   }
   int64_t interval = (*it).first - now;
 
   itimerspec new_value;
   memset(&new_value, 0, sizeof(new_value));
-  
+
   timespec ts;
   memset(&ts, 0, sizeof(ts));
   ts.tv_sec = interval / 1000;
@@ -94,49 +92,45 @@ void Timer::resetArriveTime() {
   int rt = timerfd_settime(m_fd, 0, &new_value, nullptr);
 
   if (rt != 0) {
-    LOG(ERROR)<< "tiemr_settime error, interval=" << interval;
+    LOG(ERROR) << "tiemr_settime error, interval=" << interval;
   } else {
     // DebugLog << "reset timer succ, next occur time=" << (*it).first;
   }
-
 }
 
 void Timer::onTimer() {
-
   LOG(DEBUG) << "onTimer, first read data";
   char buf[8];
-  while(1) {
-    if((g_sys_read_fun(m_fd, buf, 8) == -1) && errno == EAGAIN) {
+  while (1) {
+    if ((g_sys_read_fun(m_fd, buf, 8) == -1) && errno == EAGAIN) {
       break;
     }
   }
 
   int64_t now = getNowMs();
-	auto it = m_pending_events.begin();
-	std::vector<TimerEvent::ptr> tmps;
-	std::vector<std::function<void()>> tasks;
-	for (it = m_pending_events.begin(); it != m_pending_events.end(); ++it) {
-		if ((*it).first <= now && !((*it).second->m_is_cancled)) {
-			tmps.push_back((*it).second);
-			tasks.push_back((*it).second->m_task);
-		}	else {
-			break;
-		}
-	}
+  auto it = m_pending_events.begin();
+  std::vector<TimerEvent::ptr> tmps;
+  std::vector<std::function<void()>> tasks;
+  for (it = m_pending_events.begin(); it != m_pending_events.end(); ++it) {
+    if ((*it).first <= now && !((*it).second->m_is_cancled)) {
+      tmps.push_back((*it).second);
+      tasks.push_back((*it).second->m_task);
+    } else {
+      break;
+    }
+  }
 
-	assert(m_reactor != nullptr);
-	m_reactor->addTask(tasks);
-	m_pending_events.erase(m_pending_events.begin(), it);
-	for (auto i = tmps.begin(); i != tmps.end(); ++i) {
-		if ((*i)->m_is_repeated) {
-			(*i)->resetTime();
-			addTimerEvent(*i, false);
-		}
-	}
+  assert(m_reactor != nullptr);
+  m_reactor->addTask(tasks);
+  m_pending_events.erase(m_pending_events.begin(), it);
+  for (auto i = tmps.begin(); i != tmps.end(); ++i) {
+    if ((*i)->m_is_repeated) {
+      (*i)->resetTime();
+      addTimerEvent(*i, false);
+    }
+  }
 
-	resetArriveTime();
+  resetArriveTime();
 }
 
-}
-
-
+}  // namespace net

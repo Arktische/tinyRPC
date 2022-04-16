@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <vector>
+
 #include "abstract_slot.h"
 #include "reactor.h"
 #include "timer.h"
@@ -12,7 +13,6 @@ namespace net {
 class TcpConnection;
 
 class TcpTimeWheel {
-
  public:
   typedef std::shared_ptr<TcpTimeWheel> ptr;
 
@@ -26,21 +26,15 @@ class TcpTimeWheel {
 
   void loopFunc();
 
-
  private:
-  Reactor* m_reactor {nullptr};
-  int m_bucket_count {0};
-  int m_inteval {0};    // second
+  Reactor* m_reactor{nullptr};
+  int m_bucket_count{0};
+  int m_inteval{0};  // second
 
   TimerEvent::ptr m_event;
   std::queue<std::vector<TcpConnectionSlot::ptr>> m_wheel;
 };
 
-
-}
-
-
-
-
+}  // namespace net
 
 #endif
