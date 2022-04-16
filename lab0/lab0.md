@@ -1,5 +1,5 @@
 # Lab0
-[Chinese version](lab0-cn.md)
+[Chinese version](lab0_cn.md)
 
 In this piece you will install development tools and configure the environment step by step.
 

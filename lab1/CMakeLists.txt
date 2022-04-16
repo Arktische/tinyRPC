@@ -1,10 +1,10 @@
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 include_directories(
         ./
         ${PROJECT_SOURCE_DIR}
 )
 enable_testing()
-add_executable(echo-server echo-server.hpp echo-server.cc)
+add_executable(echo-server echo_server.hpp echo_server.cc)
 target_link_libraries(
         echo-server
         pthread

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "fastclock.hpp"
-#include "non-copyable.hpp"
+#include "noncopyable.hpp"
 #include "singleton.hpp"
 #include "string.hpp"
 using cstr = const char* const;

@@ -109,5 +109,5 @@ inline google::protobuf::Message* decode(const std::string& buf) {
 
   return result;
 }
-}  // namespace codec
+}  // namespace protocol
 #endif  // TINYRPC_CODEC_PB_HPP

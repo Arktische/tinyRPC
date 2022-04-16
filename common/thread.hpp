@@ -28,6 +28,7 @@ class Thread : public std::thread {
 #endif
     f();
   }
+
 };
 }  // namespace common
 #endif  // TINYRPC_THREAD_HPP

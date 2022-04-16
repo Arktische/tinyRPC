@@ -8,7 +8,7 @@
 #include <vector>
 #include <bitset>
 #include <common/log.hpp>
-#include <common/non-copyable.hpp>
+#include <common/noncopyable.hpp>
 
 using common::NonCopyable;
 using std::vector;

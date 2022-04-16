@@ -1,4 +1,4 @@
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 include_directories(
         ${PROJECT_SOURCE_DIR}
 )
@@ -7,7 +7,7 @@ enable_testing()
 add_compile_options(-mavx2)
 add_executable(
         common_test
-        common-test.cc
+        common_test.cc
         trait.hpp
 )
 
@@ -17,9 +17,14 @@ target_link_libraries(
         ${GTEST_LIBRARIES}
 )
 
+target_compile_options(
+        common_test
+        PRIVATE -fconcepts
+)
+
 add_executable(
         common_bench
-        common-bench.cc
+        common_bench.cc
 )
 target_compile_options(
         common_bench

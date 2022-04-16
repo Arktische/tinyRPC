@@ -12,7 +12,7 @@
 #include <set>
 #include <vector>
 
-#include <common/non-copyable.hpp>
+#include <common/noncopyable.hpp>
 namespace core {
 using common::NonCopyable;
 using std::bitset;

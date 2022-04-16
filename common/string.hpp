@@ -9,6 +9,8 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <algorithm>
+#include <cstring>
 namespace common {
 /*
  * fast itoa & ptr to hex conversion, 3x faster on 64bit integer conversion
