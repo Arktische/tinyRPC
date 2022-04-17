@@ -1,4 +1,4 @@
-#include "netaddr.h"
+#include "addr.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>

@@ -3,7 +3,6 @@
 #include <queue>
 #include <vector>
 
-#include "abstract_slot.h"
 #include "tcp_connection.h"
 #include "timer.h"
 
