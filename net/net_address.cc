@@ -25,7 +25,7 @@ IPAddress::IPAddress(const std::string& ip, uint16_t port)
 }
 
 IPAddress::IPAddress(sockaddr_in addr) : m_addr(addr) {
-  // if (m_addr.sin_family != AF_INET) {
+  // if (addr_in_.sin_family != AF_INET) {
   // ErrorLog << "err family, this address is valid";
   // }
   m_ip = std::string(inet_ntoa(m_addr.sin_addr));

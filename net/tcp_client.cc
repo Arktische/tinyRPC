@@ -5,9 +5,9 @@
 
 #include "common/error.hpp"
 #include "common/log.hpp"
-#include "coroutine/coroutine.h"
-#include "coroutine/coroutine_hook.h"
-#include "coroutine/coroutine_pool.h"
+#include "common/coroutine/coroutine.h"
+#include "coroutine_hook.h"
+#include "common/coroutine/coroutine_pool.h"
 #include "net_address.h"
 
 namespace net {

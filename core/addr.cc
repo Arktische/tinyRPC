@@ -14,66 +14,66 @@
 #include "common/log.hpp"
 //#include "../comm/log.h"
 
-namespace net {
+namespace core {
 
 IPAddress::IPAddress(std::string ip, uint16_t port)
-    : m_ip(std::move(ip)), m_port(port) {
-  memset(&m_addr, 0, sizeof(m_addr));
-  m_addr.sin_family = AF_INET;
-  m_addr.sin_addr.s_addr = inet_addr(m_ip.c_str());
-  m_addr.sin_port = htons(m_port);
+    : ip_str_(std::move(ip)), port_(port) {
+  memset(&addr_in_, 0, sizeof(addr_in_));
+  addr_in_.sin_family = AF_INET;
+  addr_in_.sin_addr.s_addr = inet_addr(ip_str_.c_str());
+  addr_in_.sin_port = htons(port_);
 
-  LOG(DEBUG) << "create ipv4 address succ [" << toString() << "]";
+  LOG(DEBUG) << "create ipv4 address succ [" << String() << "]";
 }
 
-IPAddress::IPAddress(sockaddr_in addr) : m_addr(addr) {
-  // if (m_addr.sin_family != AF_INET) {
+IPAddress::IPAddress(sockaddr_in addr) : addr_in_(addr) {
+  // if (addr_in_.sin_family != AF_INET) {
   // ErrorLog << "err family, this address is valid";
   // }
-  m_ip = std::string(inet_ntoa(m_addr.sin_addr));
-  m_port = ntohs(m_addr.sin_port);
+  ip_str_ = std::string(inet_ntoa(addr_in_.sin_addr));
+  port_ = ntohs(addr_in_.sin_port);
 }
-IPAddress::IPAddress(uint16_t port) : m_port(port) {
-  memset(&m_addr, 0, sizeof(m_addr));
-  m_addr.sin_family = AF_INET;
-  m_addr.sin_addr.s_addr = INADDR_ANY;
-  m_addr.sin_port = htons(m_port);
+IPAddress::IPAddress(uint16_t port) : port_(port) {
+  memset(&addr_in_, 0, sizeof(addr_in_));
+  addr_in_.sin_family = AF_INET;
+  addr_in_.sin_addr.s_addr = INADDR_ANY;
+  addr_in_.sin_port = htons(port_);
 
-  LOG(DEBUG) << "create ipv4 address succ [" << toString() << "]";
-}
-
-int IPAddress::getFamily() const { return m_addr.sin_family; }
-
-sockaddr* IPAddress::getSockAddr() {
-  return reinterpret_cast<sockaddr*>(&m_addr);
+  LOG(DEBUG) << "create ipv4 address succ [" << String() << "]";
 }
 
-std::string IPAddress::toString() {
+int IPAddress::Family() const { return addr_in_.sin_family; }
+
+sockaddr* IPAddress::SockAddr() {
+  return reinterpret_cast<sockaddr*>(&addr_in_);
+}
+
+std::string IPAddress::String() {
   std::stringstream ss;
-  ss << m_ip << ":" << m_port;
+  ss << ip_str_ << ":" << port_;
   return ss.str();
 }
 
-socklen_t IPAddress::getSockLen() const { return sizeof(m_addr); }
+socklen_t IPAddress::SockLen() const { return sizeof(addr_in_); }
 
-UnixDomainAddress::UnixDomainAddress(std::string& path) : m_path(path) {
-  memset(&m_addr, 0, sizeof(m_addr));
-  unlink(m_path.c_str());
-  m_addr.sun_family = AF_UNIX;
-  strcpy(m_addr.sun_path, m_path.c_str());
+UnixDomainAddress::UnixDomainAddress(std::string& path) : path_(path) {
+  memset(&addr_un_, 0, sizeof(addr_un_));
+  unlink(path_.c_str());
+  addr_un_.sun_family = AF_UNIX;
+  strcpy(addr_un_.sun_path, path_.c_str());
 }
-UnixDomainAddress::UnixDomainAddress(sockaddr_un addr) : m_addr(addr) {
-  m_path = m_addr.sun_path;
-}
-
-int UnixDomainAddress::getFamily() const { return m_addr.sun_family; }
-
-sockaddr* UnixDomainAddress::getSockAddr() {
-  return reinterpret_cast<sockaddr*>(&m_addr);
+UnixDomainAddress::UnixDomainAddress(sockaddr_un addr) : addr_un_(addr) {
+  path_ = addr_un_.sun_path;
 }
 
-socklen_t UnixDomainAddress::getSockLen() const { return sizeof(m_addr); }
+int UnixDomainAddress::Family() const { return addr_un_.sun_family; }
 
-std::string UnixDomainAddress::toString() { return m_path; }
+sockaddr* UnixDomainAddress::SockAddr() {
+  return reinterpret_cast<sockaddr*>(&addr_un_);
+}
+
+socklen_t UnixDomainAddress::SockLen() const { return sizeof(addr_un_); }
+
+std::string UnixDomainAddress::String() { return path_; }
 
 }  // namespace net

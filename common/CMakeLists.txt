@@ -35,7 +35,7 @@ target_link_libraries(
         common_bench
         benchmark::benchmark
 )
-
+add_subdirectory(coroutine)
 include(GoogleTest)
 gtest_discover_tests(
         common_test

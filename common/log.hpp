@@ -2,6 +2,7 @@
 // Created by tyx on 12/23/21.
 //
 #pragma once
+#include <chrono>
 #ifndef TINYRPC_LOG_HPP
 #define TINYRPC_LOG_HPP
 
@@ -246,8 +247,9 @@ class LogMessage {
     LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)
                                ? LogLv<GLOBAL>::output
                                : LogLv<LEVEL>::output;
+                               using fClkInMilliSec = FastClock<std::chrono::milliseconds>;
     auto ts =
-        Singleton<FastClock<std::chrono::milliseconds>>::getInstance().Now();
+        Singleton<fClkInMilliSec>::getInstance().Now();
 
     logstream_ << localtime(&ts) << file << ':' << line << ' '
                << LogLv<LEVEL>::id << ' ';

@@ -30,13 +30,10 @@ endif ()
 
 FetchContent_MakeAvailable(googletest benchmark)
 enable_testing()
-add_subdirectory(
-        common
-)
+add_subdirectory(common)
 add_subdirectory(lab0)
 add_subdirectory(lab1)
 add_subdirectory(protocol)
 add_subdirectory(core)
 add_subdirectory(net)
-add_subdirectory(coroutine)
 add_library(${PROJECT_NAME} tinyRPC.cc)

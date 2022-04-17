@@ -16,6 +16,7 @@ add_library(
         link-buffer.hpp
         tcp-stream-buffer.hpp
         timer.hpp
+        addr.cc
 )
 add_dependencies(core build_liburing)
 target_link_libraries(core ${LIBURING_LIBRARY})

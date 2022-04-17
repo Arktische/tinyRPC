@@ -10,66 +10,66 @@
 
 #include <memory>
 
-namespace net {
+namespace core {
 
-class NetAddress {
+class Address {
  public:
-  typedef std::shared_ptr<NetAddress> ptr;
+  typedef std::shared_ptr<Address> ptr;
 
-  virtual sockaddr* getSockAddr() = 0;
+  virtual sockaddr* SockAddr() = 0;
 
-  virtual int getFamily() const = 0;
+  virtual int Family() const = 0;
 
-  virtual std::string toString() = 0;
+  virtual std::string String() = 0;
 
-  virtual socklen_t getSockLen() const = 0;
+  virtual socklen_t SockLen() const = 0;
 };
 
-class IPAddress : public NetAddress {
+class IPAddress : public Address {
  public:
   IPAddress(std::string ip, uint16_t port);
 
-  IPAddress(uint16_t port);
+  explicit IPAddress(uint16_t port);
 
-  IPAddress(sockaddr_in addr);
+  explicit IPAddress(sockaddr_in addr);
 
-  sockaddr* getSockAddr();
+  sockaddr* SockAddr() override;
 
-  int getFamily() const;
+  int Family() const;
 
-  socklen_t getSockLen() const;
+  socklen_t SockLen() const;
 
-  std::string toString();
+  std::string String() override;
 
-  std::string getIp() const { return m_ip; }
+  std::string getIp() const { return ip_str_; }
 
-  int getPort() const { return m_port; }
+  int getPort() const { return port_; }
 
  private:
-  std::string m_ip;
-  uint16_t m_port;
-  sockaddr_in m_addr;
+  std::string ip_str_;
+  uint16_t port_;
+  sockaddr_in addr_in_;
 };
 
-class UnixDomainAddress : public NetAddress {
+class UnixDomainAddress : public Address {
  public:
-  UnixDomainAddress(std::string& path);
+  explicit UnixDomainAddress(std::string& path);
 
-  UnixDomainAddress(sockaddr_un addr);
+  explicit UnixDomainAddress(sockaddr_un addr);
 
-  sockaddr* getSockAddr();
+  sockaddr* SockAddr() override;
 
-  int getFamily() const;
+  int Family() const;
 
-  socklen_t getSockLen() const;
+  socklen_t SockLen() const;
 
-  std::string getPath() const { return m_path; }
+  std::string getPath() const { return path_; }
 
-  std::string toString();
+  std::string String();
 
  private:
-  std::string m_path;
-  sockaddr_un m_addr;
+  std::string path_;
+  sockaddr_un addr_un_;
 };
 
 }  // namespace net

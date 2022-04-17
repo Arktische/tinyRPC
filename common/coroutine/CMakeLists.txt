@@ -9,6 +9,5 @@ enable_testing()
 add_library(
         coroutine
         coctx_swap.S
-        coroutine_hook.cc
         coroutine_pool.cc
 )

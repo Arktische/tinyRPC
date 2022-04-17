@@ -15,6 +15,10 @@
 namespace codec {
 static const int kHeaderLen = sizeof(int32_t);
 
+class Protobuf {
+  
+};
+
 inline std::string encode(const google::protobuf::Message& message) {
   std::string result;
 

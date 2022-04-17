@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "common/thread.hpp"
-#include "core/netaddr.h"
+#include "core/addr.h"
 namespace net {
 using common::Thread;
 using std::vector;

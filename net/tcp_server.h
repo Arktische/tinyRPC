@@ -8,7 +8,7 @@
 #include "net_address.h"
 #include "reactor.h"
 #include "tcp_connection.h"
-#include "tcp_connection_time_wheel.h"
+#include "tcp_conn_timer.h"
 #include "timer.h"
 
 namespace net {
@@ -16,7 +16,7 @@ namespace net {
 class TcpAcceptor {
  public:
   typedef std::shared_ptr<TcpAcceptor> ptr;
-  TcpAcceptor(NetAddress::ptr net_addr);
+  explicit TcpAcceptor(NetAddress::ptr net_addr);
 
   void init();
 
@@ -38,7 +38,7 @@ class TcpAcceptor {
 
 class TcpServer {
  public:
-  TcpServer(NetAddress::ptr addr, int pool_size = 10);
+  explicit TcpServer(NetAddress::ptr addr, int pool_size = 10);
 
   ~TcpServer();
 
@@ -46,16 +46,10 @@ class TcpServer {
 
   void addCoroutine(common::Coroutine::ptr cor);
 
-  bool addClient(int fd);
-
-  TcpTimeWheel* getTimeWheel();
-
   NetAddress::ptr getPeerAddr();
 
  private:
   void MainAcceptCorFunc();
-
-  void MainLoopTimerFunc();
 
  private:
   NetAddress::ptr m_addr;

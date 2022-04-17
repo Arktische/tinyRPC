@@ -8,8 +8,8 @@
 
 #include <algorithm>
 
-#include "../coroutine/coroutine.h"
-#include "../coroutine/coroutine_hook.h"
+#include <common/coroutine/coroutine.h>
+#include "coroutine_hook.h"
 #include "common/log.hpp"
 #include "fd_event.h"
 #include "mutex.h"
@@ -230,7 +230,7 @@ void Reactor::loop() {
           }
 
         } else {
-          FdEvent* ptr = (FdEvent*)one_event.data.ptr;
+          auto* ptr = (FdEvent*)one_event.data.ptr;
           if (ptr != nullptr) {
             int fd;
             std::function<void()> read_cb;

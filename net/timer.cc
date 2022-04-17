@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "common/log.hpp"
-#include "coroutine/coroutine_hook.h"
+#include "coroutine_hook.h"
 #include "fd_event.h"
 #include "mutex.h"
 

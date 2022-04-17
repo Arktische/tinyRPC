@@ -5,8 +5,8 @@
 
 #include <memory>
 
-#include "coroutine/coroutine.h"
-#include "coroutine/coroutine_hook.h"
+#include <common/coroutine/coroutine.h>
+#include "coroutine_hook.h"
 #include "net_address.h"
 #include "reactor.h"
 #include "tcp_connection.h"
