@@ -14,9 +14,24 @@
 // refer to muduo
 namespace codec {
 static const int kHeaderLen = sizeof(int32_t);
+inline std::string encode(const google::protobuf::Message& message);
+inline google::protobuf::Message* decode(const std::string& buf);
+inline google::protobuf::Message* createMessage(const std::string& type_name);
 
-class Protobuf {
-  
+template<typename streamT>
+class CodecProtobuf {
+public:
+  using selfT = CodecProtobuf<streamT>;
+  explicit CodecProtobuf(streamT& stream):stream_(stream) {}
+  selfT& operator <<(const google::protobuf::Message& message) {
+    stream_<<encode(message);
+  }
+  selfT& operator>>(google::protobuf::Message& msg) {
+     auto msg_ptr = decode(stream_.string());
+     msg = *msg_ptr;
+  }
+  private:
+  streamT stream_;
 };
 
 inline std::string encode(const google::protobuf::Message& message) {

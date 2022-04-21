@@ -12,3 +12,5 @@ add_definitions(${LLVM_DEFINITIONS})
 add_definitions(${CLANG_DEFINITIONS})
 set(LIBCLANG_LIBRARY libclang)
 add_executable(tinyprotoc protoc.cc)
+
+add_library(protocol protocol.cc)

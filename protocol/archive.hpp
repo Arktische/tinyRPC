@@ -1,22 +1,5 @@
 #ifndef TINYRPC_CODEC_ARCHIVE_HPP
 #define TINYRPC_CODEC_ARCHIVE_HPP
-/*
-This is free and unencumbered software released into the public domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-*/
-
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -140,40 +123,40 @@ class SwapByte<double, 8> : public SwapByteBase {
 }  // namespace endian
 
 namespace codec {
-template <typename STREAM_TYPE>
-class Archive {
+template <typename streamT>
+class CodecArchive {
  public:
-  explicit Archive(STREAM_TYPE& stream) : m_stream(stream) {}
+  explicit CodecArchive(streamT& stream) : stream_(stream) {}
 
  public:
   template <typename T>
-  const Archive& operator<<(const T& v) const {
+  const CodecArchive& operator<<(const T& v) const {
     *this& v;
     return *this;
   }
 
   template <typename T>
-  Archive& operator>>(T& v) {
+  CodecArchive& operator>>(T& v) {
     *this& v;
     return *this;
   }
 
  public:
   template <typename T>
-  Archive& operator&(T& v) {
+  CodecArchive& operator&(T& v) {
     auto tp = detail::as_tuple<T>();
     std::apply([&](auto&&... args) { ((*this << args), ...); }, tp);
     return *this;
   }
 
   template <typename T>
-  const Archive& operator&(const T& v) const {
+  const CodecArchive& operator&(const T& v) const {
     ((T&)v).Serialize(*this);
     return *this;
   }
 
   template <typename T, size_t N>
-  Archive& operator&(T (&v)[N]) {
+  CodecArchive& operator&(T (&v)[N]) {
     uint32_t len;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -181,7 +164,7 @@ class Archive {
   }
 
   template <typename T, size_t N>
-  const Archive& operator&(const T (&v)[N]) const {
+  const CodecArchive& operator&(const T (&v)[N]) const {
     uint32_t len = N;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -189,17 +172,17 @@ class Archive {
   }
 
 #define SERIALIZER_FOR_POD(type)                   \
-  Archive& operator&(type& v) {                    \
-    m_stream.read((char*)&v, sizeof(type));        \
-    if (!m_stream) {                               \
+  CodecArchive& operator&(type& v) {                    \
+    stream_.read((char*)&v, sizeof(type));        \
+    if (!stream_) {                               \
       throw std::runtime_error("malformed data");  \
     }                                              \
     v = Swap(v);                                   \
     return *this;                                  \
   }                                                \
-  const Archive& operator&(type v) const {         \
+  const CodecArchive& operator&(type v) const {         \
     v = Swap(v);                                   \
-    m_stream.write((const char*)&v, sizeof(type)); \
+    stream_.write((const char*)&v, sizeof(type)); \
     return *this;                                  \
   }
 
@@ -219,7 +202,7 @@ class Archive {
 
 #define SERIALIZER_FOR_STL(type)                                               \
   template <typename T>                                                        \
-  Archive& operator&(type<T>& v) {                                             \
+  CodecArchive& operator&(type<T>& v) {                                             \
     uint32_t len;                                                              \
     *this& len;                                                                \
     for (uint32_t i = 0; i < len; ++i) {                                       \
@@ -230,7 +213,7 @@ class Archive {
     return *this;                                                              \
   }                                                                            \
   template <typename T>                                                        \
-  const Archive& operator&(const type<T>& v) const {                           \
+  const CodecArchive& operator&(const type<T>& v) const {                           \
     uint32_t len = v.size();                                                   \
     *this& len;                                                                \
     for (typename type<T>::const_iterator it = v.begin(); it != v.end(); ++it) \
@@ -240,7 +223,7 @@ class Archive {
 
 #define SERIALIZER_FOR_STL2(type)                                             \
   template <typename T1, typename T2>                                         \
-  Archive& operator&(type<T1, T2>& v) {                                       \
+  CodecArchive& operator&(type<T1, T2>& v) {                                       \
     uint32_t len;                                                             \
     *this& len;                                                               \
     for (uint32_t i = 0; i < len; ++i) {                                      \
@@ -251,7 +234,7 @@ class Archive {
     return *this;                                                             \
   }                                                                           \
   template <typename T1, typename T2>                                         \
-  const Archive& operator&(const type<T1, T2>& v) const {                     \
+  const CodecArchive& operator&(const type<T1, T2>& v) const {                     \
     uint32_t len = v.size();                                                  \
     *this& len;                                                               \
     for (typename type<T1, T2>::const_iterator it = v.begin(); it != v.end(); \
@@ -269,18 +252,18 @@ class Archive {
   SERIALIZER_FOR_STL2(std::multimap);
 
   template <typename T1, typename T2>
-  Archive& operator&(std::pair<T1, T2>& v) {
+  CodecArchive& operator&(std::pair<T1, T2>& v) {
     *this& v.first& v.second;
     return *this;
   }
 
   template <typename T1, typename T2>
-  const Archive& operator&(const std::pair<T1, T2>& v) const {
+  const CodecArchive& operator&(const std::pair<T1, T2>& v) const {
     *this& v.first& v.second;
     return *this;
   }
 
-  Archive& operator&(std::string& v) {
+  CodecArchive& operator&(std::string& v) {
     uint32_t len;
     *this& len;
     v.clear();
@@ -288,18 +271,18 @@ class Archive {
     uint32_t toRead = len;
     while (toRead != 0) {
       uint32_t l = std::min(toRead, (uint32_t)sizeof(buffer));
-      m_stream.read(buffer, l);
-      if (!m_stream) throw std::runtime_error("malformed data");
+      stream_.read(buffer, l);
+      if (!stream_) throw std::runtime_error("malformed data");
       v += std::string(buffer, l);
       toRead -= l;
     }
     return *this;
   }
 
-  const Archive& operator&(const std::string& v) const {
+  const CodecArchive& operator&(const std::string& v) const {
     uint32_t len = v.length();
     *this& len;
-    m_stream.write(v.c_str(), len);
+    stream_.write(v.c_str(), len);
     return *this;
   }
 
@@ -310,7 +293,7 @@ class Archive {
   }
 
  public:
-  STREAM_TYPE& m_stream;
+  streamT& stream_;
 };
 }  // namespace codec
 #endif  // TINYRPC_CODEC_ARCHIVE_HPP
