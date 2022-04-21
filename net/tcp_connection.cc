@@ -84,9 +84,9 @@ void TcpConnection::initBuffer(int size) {
 void TcpConnection::MainServerLoopCorFunc() {
   while (!m_stop) {
     input();
-
-    execute();
-
+    rcb_(shared_from_this());
+    // execute();
+    wcb_(shared_from_this());
     output();
   }
 }

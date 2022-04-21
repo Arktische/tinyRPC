@@ -1,14 +1,16 @@
 #ifndef TINYRPC_NET_TCP_TCP_SERVER_H
 #define TINYRPC_NET_TCP_TCP_SERVER_H
 
+#include <functional>
 #include <map>
+#include <utility>
 
 #include "fd_event.h"
 #include "io_thread.h"
 #include "net_address.h"
 #include "reactor.h"
-#include "tcp_connection.h"
 #include "tcp_conn_timer.h"
+#include "tcp_connection.h"
 #include "timer.h"
 
 namespace net {
@@ -47,7 +49,13 @@ class TcpServer {
   void addCoroutine(common::Coroutine::ptr cor);
 
   NetAddress::ptr getPeerAddr();
+  void AddOnReadCallback(std::function<void(TcpConnection::ptr)> f) {
+    rcb_ = std::move(f);
+  }
 
+  void AddOnWriteCallback(std::function<void(TcpConnection::ptr)> f) {
+    wcb_ = std::move(f);
+  }
  private:
   void MainAcceptCorFunc();
 
@@ -70,6 +78,9 @@ class TcpServer {
   // Timer::ptr m_timer;
 
   IOThreadPool::ptr m_io_pool;
+public:
+  std::function<void(TcpConnection::ptr)> rcb_;
+  std::function<void(TcpConnection::ptr)> wcb_;
 };
 
 }  // namespace net

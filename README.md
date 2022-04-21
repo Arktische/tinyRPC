@@ -15,7 +15,7 @@ interview especially for campus recruiting.
 Be sure to use the following environment：
 * Linux release: Ubuntu 20.04 LTS
 * cmake version >= 3.22
-* gcc/g++ version >= 8.0 or clang/clang++ version >= 13.0
+* gcc/g++ version >= 8.0 or clang/clang++ version >= 10.0
 * OS arch: amd64 aka x86_64
 * CPU: Intel CPU with AVX support (commonly after skylake)
 > If you use other platforms, the project is **NOT** guaranteed to compile and run correctly.
@@ -27,6 +27,10 @@ The whole project is divided into few steps, in each piece you will write your c
     * installation of development tools & env configuration
 * [lab1](lab1/lab1.md)
     * basic practice of linux networking programming with epoll.
+* [net](net/net.md)
+    * networking library with epoll support
+* [core](core/core.md)
+    * yet another networking library with io_uring support.
 
 ## Open Source License Declaration
 [dota-benchmark](https://github.com/miloyip/dtoa-benchmark/blob/master/license.txt)

@@ -14,7 +14,7 @@ Pivot Talent Plan-tinyRPC 旨在构建一个功能完备的微型RPC（Remote Pr
 请务必使用以下系统环境：
 * Linux 版本：Ubuntu 20.04 LTS
 * cmake 版本 >= 3.22
-* gcc/g++ 版本 >= 8.0 或 clang/clang++ 版本 >= 13.0
+* gcc/g++ 版本 >= 8.0 或 clang/clang++ 版本 >= 10.0
 * 操作系统架构：amd64 aka x86_64
 * CPU：支持 AVX 的Intel CPU（通常skylake架构之后都支持）
 > 如果你使用其他系统环境，则**不能**保证tinyRPC能正确编译和正常运行。

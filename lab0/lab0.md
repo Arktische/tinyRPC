@@ -13,6 +13,8 @@ sudo apt install build-essential
 sudo apt install git
 sudo apt install cmake
 sudo apt install protobuf-compiler
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get install gcc-10 g++-10
 ```
 
 After executing those commands successfully, you are ready to go :)

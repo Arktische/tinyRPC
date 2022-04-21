@@ -1,6 +1,7 @@
 #ifndef net_NET_TCP_TCP_CONNECTION_H
 #define net_NET_TCP_TCP_CONNECTION_H
 
+#include <functional>
 #include <memory>
 #include <queue>
 #include <vector>
@@ -68,10 +69,16 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void MainServerLoopCorFunc();
 
   void input();
+  void OnRead(std::function<void(ptr)> f) {
+    rcb_ = std::move(f);
+  }
 
   void execute();
 
   void output();
+  void OnWrite(std::function<void(ptr)> f) {
+    wcb_ = std::move(f);
+  }
 
  private:
   void clearClient();
@@ -101,6 +108,8 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   //  std::queue<TinyPbStruct> m_client_res_data_queue;
 
   std::weak_ptr<AbstractSlot<TcpConnection>> m_weak_slot;
+  std::function<void(ptr)> rcb_;
+  std::function<void(ptr)> wcb_;  
 };
 
 }  // namespace net
