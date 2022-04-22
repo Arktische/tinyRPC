@@ -27,7 +27,7 @@ class NetAddress {
 
 class IPAddress : public NetAddress {
  public:
-  IPAddress(const std::string& ip, uint16_t port);
+  IPAddress(std::string  ip, uint16_t port);
 
   IPAddress(uint16_t port);
 
@@ -53,15 +53,15 @@ class IPAddress : public NetAddress {
 
 class UnixDomainAddress : public NetAddress {
  public:
-  UnixDomainAddress(std::string& path);
+  explicit UnixDomainAddress(std::string path);
 
-  UnixDomainAddress(sockaddr_un addr);
+  explicit UnixDomainAddress(sockaddr_un addr);
 
-  sockaddr* getSockAddr();
+  sockaddr* getSockAddr() override;
 
-  int getFamily() const;
+  int getFamily() const override;
 
-  socklen_t getSockLen() const;
+  socklen_t getSockLen() const override;
 
   std::string getPath() const { return path_; }
 
@@ -69,7 +69,7 @@ class UnixDomainAddress : public NetAddress {
 
  private:
   std::string path_;
-  sockaddr_un addr_;
+  sockaddr_un addr_{};
 };
 
 }  // namespace net

@@ -9,13 +9,14 @@
 #include <unistd.h>
 
 #include <sstream>
+#include <utility>
 
 #include "common/log.hpp"
 
 namespace net {
 
-IPAddress::IPAddress(const std::string& ip, uint16_t port)
-    : ip_(ip), port_(port) {
+IPAddress::IPAddress(std::string  ip, uint16_t port)
+    : ip_(std::move(ip)), port_(port) {
   memset(&addr_, 0, sizeof(addr_));
   addr_.sin_family = AF_INET;
   addr_.sin_addr.s_addr = inet_addr(ip_.c_str());
@@ -54,7 +55,7 @@ std::string IPAddress::toString() {
 
 socklen_t IPAddress::getSockLen() const { return sizeof(addr_); }
 
-UnixDomainAddress::UnixDomainAddress(std::string& path) : path_(path) {
+UnixDomainAddress::UnixDomainAddress(std::string path) : path_(std::move(path)) {
   memset(&addr_, 0, sizeof(addr_));
   unlink(path_.c_str());
   addr_.sun_family = AF_UNIX;
