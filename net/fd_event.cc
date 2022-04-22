@@ -21,9 +21,9 @@ FdEvent::~FdEvent() {}
 
 void FdEvent::handleEvent(int flag) {
   if (flag == READ) {
-    m_read_callback();
+    read_cb_();
   } else if (flag == WRITE) {
-    m_write_callback();
+    write_cb_();
   } else {
     LOG(ERROR) << "error flag";
   }
@@ -31,9 +31,9 @@ void FdEvent::handleEvent(int flag) {
 
 void FdEvent::setCallBack(IOEvent flag, std::function<void()> cb) {
   if (flag == READ) {
-    m_read_callback = cb;
+    read_cb_ = cb;
   } else if (flag == WRITE) {
-    m_write_callback = cb;
+    write_cb_ = cb;
   } else {
     LOG(ERROR) << "error flag";
   }
@@ -41,27 +41,27 @@ void FdEvent::setCallBack(IOEvent flag, std::function<void()> cb) {
 
 std::function<void()> FdEvent::getCallBack(IOEvent flag) const {
   if (flag == READ) {
-    return m_read_callback;
+    return read_cb_;
   } else if (flag == WRITE) {
-    return m_write_callback;
+    return write_cb_;
   }
   return nullptr;
 }
 
 void FdEvent::addListenEvents(IOEvent event) {
-  if (m_listen_events & event) {
+  if (listen_events_ & event) {
     LOG(DEBUG) << "already has this event, skip";
     return;
   }
-  m_listen_events |= event;
+  listen_events_ |= event;
   updateToReactor();
   // DebugLog << "add succ";
 }
 
 void FdEvent::delListenEvents(IOEvent event) {
-  if (m_listen_events & event) {
+  if (listen_events_ & event) {
     LOG(DEBUG) << "delete succ";
-    m_listen_events &= ~event;
+    listen_events_ &= ~event;
     updateToReactor();
     return;
   }
@@ -70,26 +70,26 @@ void FdEvent::delListenEvents(IOEvent event) {
 
 void FdEvent::updateToReactor() {
   epoll_event event;
-  event.events = m_listen_events;
+  event.events = listen_events_;
   event.data.ptr = this;
-  // DebugLog << "reactor = " << m_reactor << "log m_tid =" <<
-  // m_reactor->getTid();
+  // DebugLog << "reactor = " << reactor_ << "log tid_ =" <<
+  // reactor_->getTid();
 
   m_reactor->addEvent(m_fd, event);
 }
 
 void FdEvent::unregisterFromReactor() {
   m_reactor->delEvent(m_fd);
-  m_listen_events = 0;
-  m_read_callback = nullptr;
-  m_write_callback = nullptr;
+  listen_events_ = 0;
+  read_cb_ = nullptr;
+  write_cb_ = nullptr;
 }
 
 int FdEvent::getFd() const { return m_fd; }
 
 void FdEvent::setFd(const int fd) { m_fd = fd; }
 
-int FdEvent::getListenEvents() const { return m_listen_events; }
+int FdEvent::getListenEvents() const { return listen_events_; }
 
 Reactor* FdEvent::getReactor() const { return m_reactor; }
 
@@ -126,8 +126,8 @@ bool FdEvent::isNonBlock() {
 }
 
 FdEvent::ptr FdEventContainer::getFdEvent(int fd) {
-  RWMutex::ReadLock lock(m_mutex);
-  std::vector<FdEvent::ptr> tmps = m_fds;
+  RWMutex::ReadLock lock(mutex_);
+  std::vector<FdEvent::ptr> tmps = fds_;
   lock.unlock();
   if (fd < static_cast<int>(tmps.size())) {
     return tmps[fd];
@@ -141,8 +141,8 @@ FdEvent::ptr FdEventContainer::getFdEvent(int fd) {
     tmps.push_back(p);
   }
   FdEvent::ptr re = tmps[fd];
-  RWMutex::WriteLock lock2(m_mutex);
-  m_fds.swap(tmps);
+  RWMutex::WriteLock lock2(mutex_);
+  fds_.swap(tmps);
   lock.unlock();
   return re;
 }
@@ -150,7 +150,7 @@ FdEvent::ptr FdEventContainer::getFdEvent(int fd) {
 FdEventContainer::FdEventContainer(int size) {
   for (int i = 0; i < size; ++i) {
     FdEvent::ptr p = std::make_shared<FdEvent>(i);
-    m_fds.push_back(p);
+    fds_.push_back(p);
   }
 }
 

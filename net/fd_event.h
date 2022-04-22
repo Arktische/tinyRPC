@@ -63,15 +63,15 @@ class FdEvent : public std::enable_shared_from_this<FdEvent> {
   bool isNonBlock();
 
  public:
-  Mutex m_mutex;
+  Mutex mutex_;
 
  protected:
   int m_fd{-1};
-  std::function<void()> m_read_callback;
-  std::function<void()> m_write_callback;
+  std::function<void()> read_cb_;
+  std::function<void()> write_cb_;
 
-  int m_listen_events{0};
-  int m_current_events{0};
+  int listen_events_{0};
+  int cur_events_{0};
 
   Reactor* m_reactor{nullptr};
 };
@@ -86,8 +86,8 @@ class FdEventContainer {
   static FdEventContainer* GetFdContainer();
 
  private:
-  RWMutex m_mutex;
-  std::vector<FdEvent::ptr> m_fds;
+  RWMutex mutex_;
+  std::vector<FdEvent::ptr> fds_;
 };
 
 }  // namespace net

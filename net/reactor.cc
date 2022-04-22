@@ -1,6 +1,7 @@
 #include "reactor.h"
 
 #include <assert.h>
+#include <common/coroutine/coroutine.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
@@ -8,9 +9,8 @@
 
 #include <algorithm>
 
-#include <common/coroutine/coroutine.h>
-#include "coroutine_hook.h"
 #include "common/log.hpp"
+#include "coroutine_hook.h"
 #include "fd_event.h"
 #include "mutex.h"
 #include "timer.h"
@@ -27,32 +27,32 @@ static thread_local int t_max_epoll_timeout = 10000;  // ms
 Reactor::Reactor() {
   // one thread can't create more than one reactor object!!
   assert(t_reactor_ptr == nullptr);
-  m_tid = gettid();
+  tid_ = gettid();
 
-  LOG(DEBUG) << "thread[" << m_tid << "] succ create a reactor object";
+  LOG(DEBUG) << "thread[" << tid_ << "] succ create a reactor object";
   t_reactor_ptr = this;
 
-  if ((m_epfd = epoll_create(1)) <= 0) {
+  if ((epfd_ = epoll_create(1)) <= 0) {
     LOG(ERROR) << "epoll_create error";
   } else {
-    LOG(DEBUG) << "m_epfd = " << m_epfd;
+    LOG(DEBUG) << "epfd_ = " << epfd_;
   }
-  assert(m_epfd > 0);
+  assert(epfd_ > 0);
 
-  if ((m_wake_fd = eventfd(0, EFD_NONBLOCK)) <= 0) {
+  if ((wake_fd_ = eventfd(0, EFD_NONBLOCK)) <= 0) {
     LOG(ERROR) << "eventfd error";
   }
-  LOG(DEBUG) << "wakefd = " << m_wake_fd;
-  assert(m_wake_fd > 0);
+  LOG(DEBUG) << "wakefd = " << wake_fd_;
+  assert(wake_fd_ > 0);
   addWakeupFd();
 }
 
 Reactor::~Reactor() {
   LOG(DEBUG) << "~Reactor";
-  close(m_epfd);
-  if (m_timer != nullptr) {
-    delete m_timer;
-    m_timer = nullptr;
+  close(epfd_);
+  if (timer_ != nullptr) {
+    delete timer_;
+    timer_ = nullptr;
   }
   t_reactor_ptr = nullptr;
 }
@@ -77,8 +77,8 @@ void Reactor::addEvent(int fd, epoll_event event, bool is_wakeup /*=true*/) {
     return;
   }
   {
-    Mutex::Lock lock(m_mutex);
-    m_pending_add_fds.insert(std::pair<int, epoll_event>(fd, event));
+    Mutex::Lock lock(mutex_);
+    pending_add_fds_.insert(std::pair<int, epoll_event>(fd, event));
   }
   if (is_wakeup) {
     wakeup();
@@ -98,8 +98,8 @@ void Reactor::delEvent(int fd, bool is_wakeup /*=true*/) {
   }
 
   {
-    Mutex::Lock lock(m_mutex);
-    m_pending_del_fds.push_back(fd);
+    Mutex::Lock lock(mutex_);
+    pending_del_fds_.push_back(fd);
   }
   if (is_wakeup) {
     wakeup();
@@ -107,24 +107,24 @@ void Reactor::delEvent(int fd, bool is_wakeup /*=true*/) {
 }
 
 void Reactor::wakeup() {
-  if (!m_is_looping) {
+  if (!looping_) {
     return;
   }
 
   uint64_t tmp = 1;
   uint64_t* p = &tmp;
-  if (g_sys_write_fun(m_wake_fd, p, 8) != 8) {
-    LOG(ERROR) << "write wakeupfd[" << m_wake_fd << "] error";
+  if (g_sys_write_fun(wake_fd_, p, 8) != 8) {
+    LOG(ERROR) << "write wakeupfd[" << wake_fd_ << "] error";
   }
 }
 
-// m_tid only can be writed in Reactor::Reactor, so it needn't to lock
+// tid_ only can be writed in Reactor::Reactor, so it needn't to lock
 bool Reactor::isLoopThread() const {
-  if (m_tid == gettid()) {
+  if (tid_ == gettid()) {
     // DebugLog << "return true";
     return true;
   }
-  // DebugLog << "m_tid = "<< m_tid << ", getttid = " << gettid() <<"return
+  // DebugLog << "tid_ = "<< tid_ << ", getttid = " << gettid() <<"return
   // false";
   return false;
 }
@@ -132,13 +132,13 @@ bool Reactor::isLoopThread() const {
 void Reactor::addWakeupFd() {
   int op = EPOLL_CTL_ADD;
   epoll_event event;
-  event.data.fd = m_wake_fd;
+  event.data.fd = wake_fd_;
   event.events = EPOLLIN;
-  if ((epoll_ctl(m_epfd, op, m_wake_fd, &event)) != 0) {
-    LOG(ERROR) << "epoo_ctl error, fd[" << m_wake_fd << "], errno=" << errno
+  if ((epoll_ctl(epfd_, op, wake_fd_, &event)) != 0) {
+    LOG(ERROR) << "epoo_ctl error, fd[" << wake_fd_ << "], errno=" << errno
                << ", err=" << strerror(errno);
   }
-  m_fds.push_back(m_wake_fd);
+  fds_.push_back(wake_fd_);
 }
 
 // need't mutex, only this thread call
@@ -148,8 +148,8 @@ void Reactor::addEventInLoopThread(int fd, epoll_event event) {
   int op = EPOLL_CTL_ADD;
   bool is_add = true;
   // int tmp_fd = event;
-  auto it = find(m_fds.begin(), m_fds.end(), fd);
-  if (it != m_fds.end()) {
+  auto it = find(fds_.begin(), fds_.end(), fd);
+  if (it != fds_.end()) {
     is_add = false;
     op = EPOLL_CTL_MOD;
   }
@@ -158,12 +158,12 @@ void Reactor::addEventInLoopThread(int fd, epoll_event event) {
   // event.data.ptr = fd_event.get();
   // event.events = fd_event->getListenEvents();
 
-  if (epoll_ctl(m_epfd, op, fd, &event) != 0) {
+  if (epoll_ctl(epfd_, op, fd, &event) != 0) {
     LOG(ERROR) << "epoo_ctl error, fd[" << fd << "]";
     return;
   }
   if (is_add) {
-    m_fds.push_back(fd);
+    fds_.push_back(fd);
   }
   LOG(DEBUG) << "epoll_ctl add succ, fd[" << fd << "]";
 }
@@ -172,43 +172,43 @@ void Reactor::addEventInLoopThread(int fd, epoll_event event) {
 void Reactor::delEventInLoopThread(int fd) {
   assert(isLoopThread());
 
-  auto it = find(m_fds.begin(), m_fds.end(), fd);
-  if (it == m_fds.end()) {
+  auto it = find(fds_.begin(), fds_.end(), fd);
+  if (it == fds_.end()) {
     LOG(DEBUG) << "fd[" << fd << "] not in this loop";
   }
   int op = EPOLL_CTL_DEL;
 
-  if ((epoll_ctl(m_epfd, op, fd, nullptr)) != 0) {
+  if ((epoll_ctl(epfd_, op, fd, nullptr)) != 0) {
     LOG(ERROR) << "epoo_ctl error, fd[" << fd << "]";
   }
 
-  m_fds.erase(it);
+  fds_.erase(it);
   LOG(DEBUG) << "del succ, fd[" << fd << "]";
 }
 
 void Reactor::loop() {
   assert(isLoopThread());
-  if (m_is_looping) {
+  if (looping_) {
     // DebugLog << "this reactor is looping!";
     return;
   }
 
-  m_is_looping = true;
-  m_stop_flag = false;
+  looping_ = true;
+  stop_flag_ = false;
 
-  while (!m_stop_flag) {
+  while (!stop_flag_) {
     const int MAX_EVENTS = 10;
     epoll_event re_events[MAX_EVENTS + 1];
     // DebugLog << "task";
     // excute tasks
-    for (size_t i = 0; i < m_pending_tasks.size(); ++i) {
+    for (size_t i = 0; i < pending_tasks_.size(); ++i) {
       // DebugLog << "begin to excute task[" << i << "]";
-      m_pending_tasks[i]();
+      pending_tasks_[i]();
       // DebugLog << "end excute tasks[" << i << "]";
     }
-    m_pending_tasks.clear();
+    pending_tasks_.clear();
     LOG(DEBUG) << "to epoll_wait";
-    int rt = epoll_wait(m_epfd, re_events, MAX_EVENTS, t_max_epoll_timeout);
+    int rt = epoll_wait(epfd_, re_events, MAX_EVENTS, t_max_epoll_timeout);
 
     // DebugLog << "epoll_waiti back";
 
@@ -219,12 +219,12 @@ void Reactor::loop() {
       for (int i = 0; i < rt; ++i) {
         epoll_event one_event = re_events[i];
 
-        if (one_event.data.fd == m_wake_fd && (one_event.events & READ)) {
+        if (one_event.data.fd == wake_fd_ && (one_event.events & READ)) {
           // wakeup
-          // DebugLog << "epoll wakeup, fd=[" << m_wake_fd << "]";
+          // DebugLog << "epoll wakeup, fd=[" << wake_fd_ << "]";
           char buf[8];
           while (1) {
-            if ((g_sys_read_fun(m_wake_fd, buf, 8) == -1) && errno == EAGAIN) {
+            if ((g_sys_read_fun(wake_fd_, buf, 8) == -1) && errno == EAGAIN) {
               break;
             }
           }
@@ -237,7 +237,7 @@ void Reactor::loop() {
             std::function<void()> write_cb;
 
             {
-              Mutex::Lock lock(ptr->m_mutex);
+              Mutex::Lock lock(ptr->mutex_);
               fd = ptr->getFd();
               read_cb = ptr->getCallBack(READ);
               write_cb = ptr->getCallBack(WRITE);
@@ -252,13 +252,13 @@ void Reactor::loop() {
             } else {
               if (one_event.events & EPOLLIN) {
                 LOG(DEBUG) << "socket [" << fd << "] occur read event";
-                Mutex::Lock lock(m_mutex);
-                m_pending_tasks.push_back(read_cb);
+                Mutex::Lock lock(mutex_);
+                pending_tasks_.push_back(read_cb);
               }
               if (one_event.events & EPOLLOUT) {
                 LOG(DEBUG) << "socket [" << fd << "] occur write event";
-                Mutex::Lock lock(m_mutex);
-                m_pending_tasks.push_back(write_cb);
+                Mutex::Lock lock(mutex_);
+                pending_tasks_.push_back(write_cb);
               }
             }
           }
@@ -267,23 +267,23 @@ void Reactor::loop() {
 
       // DebugLog << "task";
       // excute tasks
-      // for (size_t i = 0; i < m_pending_tasks.size(); ++i) {
+      // for (size_t i = 0; i < pending_tasks_.size(); ++i) {
       // 	// DebugLog << "begin to excute task[" << i << "]";
-      // 	m_pending_tasks[i]();
+      // 	pending_tasks_[i]();
       //   // DebugLog << "end excute tasks[" << i << "]";
       // }
-      // m_pending_tasks.clear();
+      // pending_tasks_.clear();
 
       std::map<int, epoll_event> tmp_add;
       std::vector<int> tmp_del;
 
       {
-        Mutex::Lock lock(m_mutex);
-        tmp_add.swap(m_pending_add_fds);
-        m_pending_add_fds.clear();
+        Mutex::Lock lock(mutex_);
+        tmp_add.swap(pending_add_fds_);
+        pending_add_fds_.clear();
 
-        tmp_del.swap(m_pending_del_fds);
-        m_pending_del_fds.clear();
+        tmp_del.swap(pending_del_fds_);
+        pending_del_fds_.clear();
       }
       for (auto i = tmp_add.begin(); i != tmp_add.end(); ++i) {
         // DebugLog << "fd[" << (*i).first <<"] need to add";
@@ -296,20 +296,20 @@ void Reactor::loop() {
     }
   }
   LOG(DEBUG) << "reactor loop end";
-  m_is_looping = false;
+  looping_ = false;
 }
 
 void Reactor::stop() {
-  if (!m_stop_flag && m_is_looping) {
-    m_stop_flag = true;
+  if (!stop_flag_ && looping_) {
+    stop_flag_ = true;
     wakeup();
   }
 }
 
 void Reactor::addTask(std::function<void()> task, bool is_wakeup /*=true*/) {
   {
-    Mutex::Lock lock(m_mutex);
-    m_pending_tasks.push_back(task);
+    Mutex::Lock lock(mutex_);
+    pending_tasks_.push_back(task);
   }
   if (is_wakeup) {
     wakeup();
@@ -323,8 +323,8 @@ void Reactor::addTask(std::vector<std::function<void()>> task,
   }
 
   {
-    Mutex::Lock lock(m_mutex);
-    m_pending_tasks.insert(m_pending_tasks.end(), task.begin(), task.end());
+    Mutex::Lock lock(mutex_);
+    pending_tasks_.insert(pending_tasks_.end(), task.begin(), task.end());
   }
   if (is_wakeup) {
     wakeup();
@@ -338,15 +338,15 @@ void Reactor::addCoroutine(common::Coroutine::ptr cor,
 }
 
 Timer* Reactor::getTimer() {
-  if (m_is_init_timer) {
+  if (init_timer_) {
     LOG(DEBUG) << "already init timer!";
   } else {
-    m_timer = new Timer(this);
-    m_timer_fd = m_timer->getFd();
+    timer_ = new Timer(this);
+    timer_fd_ = timer_->getFd();
   }
-  return m_timer;
+  return timer_;
 }
 
-pid_t Reactor::getTid() { return m_tid; }
+pid_t Reactor::getTid() { return tid_; }
 
 }  // namespace net

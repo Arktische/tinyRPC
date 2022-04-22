@@ -10,30 +10,30 @@ namespace net {
 
 TcpTimeWheel::TcpTimeWheel(Reactor* reactor, int bucket_count,
                            int inteval /*= 10*/)
-    : m_reactor(reactor), m_bucket_count(bucket_count), m_inteval(inteval) {
+    : reactor_(reactor), bucket_count_(bucket_count), interval_(inteval) {
   for (int i = 0; i < bucket_count; ++i) {
     std::vector<TcpConnectionSlot::ptr> tmp;
-    m_wheel.push(tmp);
+    wheel_.push(tmp);
   }
 
-  m_event = std::make_shared<TimerEvent>(
-      m_inteval * 1000, true, std::bind(&TcpTimeWheel::loopFunc, this));
-  m_reactor->getTimer()->addTimerEvent(m_event);
+  event_ = std::make_shared<TimerEvent>(interval_ * 1000, true,
+                                        [this] { loopFunc(); });
+  reactor_->getTimer()->addTimerEvent(event_);
 }
 
-TcpTimeWheel::~TcpTimeWheel() { m_reactor->getTimer()->delTimerEvent(m_event); }
+TcpTimeWheel::~TcpTimeWheel() { reactor_->getTimer()->delTimerEvent(event_); }
 
 void TcpTimeWheel::loopFunc() {
   // DebugLog << "pop src bucket";
-  m_wheel.pop();
+  wheel_.pop();
   std::vector<TcpConnectionSlot::ptr> tmp;
-  m_wheel.push(tmp);
+  wheel_.push(tmp);
   // DebugLog << "push new bucket";
 }
 
-void TcpTimeWheel::fresh(TcpConnectionSlot::ptr slot) {
+void TcpTimeWheel::fresh(const TcpConnectionSlot::ptr& slot) {
   LOG(DEBUG) << "fresh connection";
-  m_wheel.back().emplace_back(slot);
+  wheel_.back().emplace_back(slot);
 }
 
 }  // namespace net

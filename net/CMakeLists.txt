@@ -17,4 +17,5 @@ add_library(
         tcp_connection.cc
         io_thread.cc
         tcp_conn_timer.cc
+        coroutine_hook.cc
 )

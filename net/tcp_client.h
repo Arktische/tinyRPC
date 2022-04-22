@@ -1,11 +1,11 @@
 #ifndef TINYRPC_NET_TCP_TCP_CLIENT_H
 #define TINYRPC_NET_TCP_TCP_CLIENT_H
 
+#include <common/coroutine/coroutine.h>
 #include <google/protobuf/service.h>
 
 #include <memory>
 
-#include <common/coroutine/coroutine.h>
 #include "coroutine_hook.h"
 #include "net_address.h"
 #include "reactor.h"
@@ -17,7 +17,7 @@ class TcpClient {
  public:
   typedef std::shared_ptr<TcpClient> ptr;
 
-  TcpClient(NetAddress::ptr addr);
+  explicit TcpClient(NetAddress::ptr addr);
 
   ~TcpClient();
 
@@ -30,25 +30,25 @@ class TcpClient {
   TcpConnection* getConnection();
 
   void setTimeout(const int v) {
-    m_max_timeout = v;
+    max_timeout_ = v;
     setMaxTimeOut(v);
   }
 
-  void setTryCounts(const int v) { m_try_counts = v; }
+  void setTryCounts(const int v) { max_retry_ = v; }
 
  private:
-  int m_family;
-  int m_fd{-1};
-  int m_try_counts{3};   // max try reconnect times
-  int m_max_timeout{5};  // max connect timeout, s
-  bool m_is_stop{false};
+  int family_;
+  int fd_{-1};
+  int max_retry_{3};    // max try reconnect times
+  int max_timeout_{5};  // max connect timeout, s
+  bool stop_{false};
 
-  NetAddress::ptr m_local_addr{nullptr};
-  NetAddress::ptr m_peer_addr{nullptr};
-  Reactor* m_reactor{nullptr};
-  TcpConnection::ptr m_connection{nullptr};
+  NetAddress::ptr local_addr_{nullptr};
+  NetAddress::ptr peer_addr_{nullptr};
+  Reactor* reactor_{nullptr};
+  TcpConnection::ptr connection_{nullptr};
 
-  bool m_connect_succ{false};
+  bool connected_{false};
 };
 
 }  // namespace net

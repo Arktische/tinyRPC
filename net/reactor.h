@@ -1,15 +1,15 @@
 #ifndef TINYRPC_NET_EVENT_LOOP_H
 #define TINYRPC_NET_EVENT_LOOP_H
 
+#include <common/coroutine/coroutine.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/epoll.h>
+
 #include <atomic>
 #include <functional>
 #include <map>
 #include <vector>
-
-#include <common/coroutine/coroutine.h>
 
 #include "mutex.h"
 
@@ -61,27 +61,27 @@ class Reactor {
   void delEventInLoopThread(int fd);
 
  private:
-  int m_epfd{-1};
-  int m_wake_fd{-1};   // wakeup fd
-  int m_timer_fd{-1};  // timer fd
-  bool m_stop_flag{false};
-  bool m_is_looping{false};
-  bool m_is_init_timer{false};
-  pid_t m_tid{0};  // thread id
+  int epfd_{-1};
+  int wake_fd_{-1};   // wakeup fd
+  int timer_fd_{-1};  // timer fd
+  bool stop_flag_{false};
+  bool looping_{false};
+  bool init_timer_{false};
+  pid_t tid_{0};  // thread id
 
-  Mutex m_mutex;  // mutex
+  Mutex mutex_;  // mutex
 
-  std::vector<int> m_fds;  // alrady care events
-  std::atomic<int> m_fd_size;
+  std::vector<int> fds_;  // alrady care events
+  std::atomic<int> fd_size_;
 
   // fds that wait for operate
   // 1 -- to add to loop
   // 2 -- to del from loop
-  std::map<int, epoll_event> m_pending_add_fds;
-  std::vector<int> m_pending_del_fds;
-  std::vector<std::function<void()>> m_pending_tasks;
+  std::map<int, epoll_event> pending_add_fds_;
+  std::vector<int> pending_del_fds_;
+  std::vector<std::function<void()>> pending_tasks_;
 
-  Timer* m_timer;
+  Timer* timer_;
 };
 
 }  // namespace net

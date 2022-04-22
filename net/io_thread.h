@@ -31,14 +31,14 @@ class IOThread {
   void MainLoopTimerFunc();
 
  private:
-  Reactor* m_reactor;
-  std::map<int, std::shared_ptr<TcpConnection>> m_clients;
+  Reactor* reactor_;
+  std::map<int, std::shared_ptr<TcpConnection>> clients_;
 
-  TcpTimeWheel::ptr m_time_wheel;
+  TcpTimeWheel::ptr time_wheel_;
 
-  pthread_t m_thread;
-  pid_t m_tid;
-  TimerEvent::ptr m_timer_event;
+  pthread_t thread_;
+  pid_t tid_;
+  TimerEvent::ptr timer_event_;
 };
 
 class IOThreadPool {
@@ -50,10 +50,10 @@ class IOThreadPool {
   IOThread* getIOThread();
 
  private:
-  int m_size{0};
-  int m_index{-1};
+  int size_{0};
+  int index_{-1};
 
-  std::vector<IOThread::ptr> m_io_threads;
+  std::vector<IOThread::ptr> io_threads_;
 };
 
 }  // namespace net

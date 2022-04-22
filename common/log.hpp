@@ -247,9 +247,8 @@ class LogMessage {
     LogLv<LEVEL>::output = (LogLv<LEVEL>::output == nullptr)
                                ? LogLv<GLOBAL>::output
                                : LogLv<LEVEL>::output;
-                               using fClkInMilliSec = FastClock<std::chrono::milliseconds>;
-    auto ts =
-        Singleton<fClkInMilliSec>::getInstance().Now();
+    using fClkInMilliSec = FastClock<std::chrono::milliseconds>;
+    auto ts = Singleton<fClkInMilliSec>::getInstance().Now();
 
     logstream_ << localtime(&ts) << file << ':' << line << ' '
                << LogLv<LEVEL>::id << ' ';

@@ -46,7 +46,7 @@ class TcpServer {
 
   void start();
 
-  void addCoroutine(common::Coroutine::ptr cor);
+  void AddCoroutine(common::Coroutine::ptr cor);
 
   NetAddress::ptr getPeerAddr();
   void AddOnReadCallback(std::function<void(TcpConnection::ptr)> f) {
@@ -56,29 +56,28 @@ class TcpServer {
   void AddOnWriteCallback(std::function<void(TcpConnection::ptr)> f) {
     wcb_ = std::move(f);
   }
+
  private:
   void MainAcceptCorFunc();
 
  private:
-  NetAddress::ptr m_addr;
+  NetAddress::ptr addr_;
 
-  TcpAcceptor::ptr m_acceptor;
+  TcpAcceptor::ptr acceptor_;
 
-  int m_tcp_counts{0};
+  int tcp_counts_{0};
 
-  Reactor* m_main_reactor{nullptr};
+  Reactor* main_reactor_{nullptr};
 
-  std::map<int, TcpConnection::ptr> m_clients;
+  std::map<int, TcpConnection::ptr> clients_;
 
-  bool m_is_stop_accept{false};
+  bool stop_accept{false};
 
-  common::Coroutine::ptr m_accept_cor;
+  common::Coroutine::ptr accpet_coroutine;
 
-  // TimerEvent::ptr m_timer_event;
-  // Timer::ptr m_timer;
+  IOThreadPool::ptr io_pool_;
 
-  IOThreadPool::ptr m_io_pool;
-public:
+ public:
   std::function<void(TcpConnection::ptr)> rcb_;
   std::function<void(TcpConnection::ptr)> wcb_;
 };

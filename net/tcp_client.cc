@@ -3,73 +3,73 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+#include "common/coroutine/coroutine.h"
+#include "common/coroutine/coroutine_pool.h"
 #include "common/error.hpp"
 #include "common/log.hpp"
-#include "common/coroutine/coroutine.h"
 #include "coroutine_hook.h"
-#include "common/coroutine/coroutine_pool.h"
 #include "net_address.h"
 
 namespace net {
 
-TcpClient::TcpClient(NetAddress::ptr addr) : m_peer_addr(addr) {
-  m_family = m_peer_addr->getFamily();
-  m_fd = socket(AF_INET, SOCK_STREAM, 0);
+TcpClient::TcpClient(NetAddress::ptr addr) : peer_addr_(addr) {
+  family_ = peer_addr_->getFamily();
+  fd_ = socket(AF_INET, SOCK_STREAM, 0);
 
-  m_reactor = Reactor::GetReactor();
-  m_connection =
-      std::make_shared<TcpConnection>(this, m_reactor, m_fd, 128, m_peer_addr);
-  assert(m_reactor != nullptr);
+  reactor_ = Reactor::GetReactor();
+  connection_ =
+      std::make_shared<TcpConnection>(this, reactor_, fd_, 128, peer_addr_);
+  assert(reactor_ != nullptr);
 }
 
 TcpClient::~TcpClient() {
-  if (m_fd > 0) {
-    close(m_fd);
+  if (fd_ > 0) {
+    close(fd_);
   }
 }
 
 TcpConnection* TcpClient::getConnection() {
-  if (!m_connection.get()) {
-    m_connection = std::make_shared<TcpConnection>(this, m_reactor, m_fd, 128,
-                                                   m_peer_addr);
+  if (!connection_.get()) {
+    connection_ =
+        std::make_shared<TcpConnection>(this, reactor_, fd_, 128, peer_addr_);
   }
-  return m_connection.get();
+  return connection_.get();
 }
 
 std::error_code TcpClient::sendAndRecv() {
-  if (m_connection->getState() != Connected) {
-    int n = m_try_counts;
+  if (connection_->getState() != Connected) {
+    int n = max_retry_;
     while (n > 0) {
       int rt = connect_hook(
-          m_fd, reinterpret_cast<sockaddr*>(m_peer_addr->getSockAddr()),
-          m_peer_addr->getSockLen());
+          fd_, reinterpret_cast<sockaddr*>(peer_addr_->getSockAddr()),
+          peer_addr_->getSockLen());
       if (rt == 0) {
-        LOG(DEBUG) << "connect [" << m_peer_addr->toString() << "] succ!";
-        m_connection->setUpClient();
+        LOG(DEBUG) << "connect [" << peer_addr_->toString() << "] succ!";
+        connection_->setUpClient();
         break;
       }
       n--;
     }
   }
-  if (m_connection->getState() != Connected) {
+  if (connection_->getState() != Connected) {
     return NetError::NET_CONN_FAILED;
   }
-  m_connection->setUpClient();
-  m_connection->output();
+  connection_->setUpClient();
+  connection_->output();
 
-  m_connection->input();
-  m_connection->execute();
+  connection_->input();
+  connection_->execute();
 
-  // if (!m_connection->getResPackageData()) {
+  // if (!connection_->getResPackageData()) {
   //   return ERROR_FAILED_GET_REPLY;
   // }
   return NetError::NET_NOERROR;
 }
 
 void TcpClient::stop() {
-  if (!m_is_stop) {
-    m_is_stop = true;
-    m_reactor->stop();
+  if (!stop_) {
+    stop_ = true;
+    reactor_->stop();
   }
 }
 

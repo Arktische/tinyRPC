@@ -41,14 +41,14 @@ class IPAddress : public NetAddress {
 
   std::string toString();
 
-  std::string getIp() const { return m_ip; }
+  std::string getIp() const { return ip_; }
 
-  int getPort() const { return m_port; }
+  int getPort() const { return port_; }
 
  private:
-  std::string m_ip;
-  uint16_t m_port;
-  sockaddr_in m_addr;
+  std::string ip_;
+  uint16_t port_;
+  sockaddr_in addr_;
 };
 
 class UnixDomainAddress : public NetAddress {
@@ -63,13 +63,13 @@ class UnixDomainAddress : public NetAddress {
 
   socklen_t getSockLen() const;
 
-  std::string getPath() const { return m_path; }
+  std::string getPath() const { return path_; }
 
   std::string toString();
 
  private:
-  std::string m_path;
-  sockaddr_un m_addr;
+  std::string path_;
+  sockaddr_un addr_;
 };
 
 }  // namespace net

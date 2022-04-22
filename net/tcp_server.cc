@@ -1,16 +1,16 @@
 #include "tcp_server.h"
 
 #include <assert.h>
+#include <common/coroutine/coroutine.h>
+#include <common/coroutine/coroutine_pool.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/socket.h>
 
-#include <common/coroutine/coroutine.h>
 #include "coroutine_hook.h"
-#include <common/coroutine/coroutine_pool.h>
 #include "io_thread.h"
-#include "tcp_connection.h"
 #include "tcp_conn_timer.h"
+#include "tcp_connection.h"
 
 namespace net {
 
@@ -24,8 +24,8 @@ void TcpAcceptor::init() {
   assert(m_fd != -1);
   LOG(DEBUG) << "create listenfd succ, listenfd=" << m_fd;
 
-  // int flag = fcntl(m_fd, F_GETFL, 0);
-  // int rt = fcntl(m_fd, F_SETFL, flag | O_NONBLOCK);
+  // int flag = fcntl(fd_, F_GETFL, 0);
+  // int rt = fcntl(fd_, F_SETFL, flag | O_NONBLOCK);
 
   // if (rt != 0) {
   // LOG(ERROR) << "fcntl set nonblock error, errno=" << errno << ", error=" <<
@@ -94,58 +94,58 @@ int TcpAcceptor::toAccept() {
 }
 
 TcpServer::TcpServer(NetAddress::ptr addr, int pool_size /*=10*/)
-    : m_addr(addr) {
-  m_io_pool = std::make_shared<IOThreadPool>(pool_size);
+    : addr_(addr) {
+  io_pool_ = std::make_shared<IOThreadPool>(pool_size);
   //	m_dispatcher = std::make_shared<TinyPbRpcDispacther>();
-  m_main_reactor = net::Reactor::GetReactor();
+  main_reactor_ = net::Reactor::GetReactor();
 }
 
 void TcpServer::start() {
-  m_acceptor.reset(new TcpAcceptor(m_addr));
-  // m_accept_cor = std::make_shared<net::Coroutine>(128 * 1024,
+  acceptor_.reset(new TcpAcceptor(addr_));
+  // accpet_coroutine = std::make_shared<net::Coroutine>(128 * 1024,
   // std::bind(&TcpServer::MainAcceptCorFunc, this));
 
-  m_accept_cor = common::GetCoroutinePool()->getCoroutineInstanse();
-  m_accept_cor->setCallBack(std::bind(&TcpServer::MainAcceptCorFunc, this));
+  accpet_coroutine = common::GetCoroutinePool()->getCoroutineInstanse();
+  accpet_coroutine->setCallBack(std::bind(&TcpServer::MainAcceptCorFunc, this));
 
-  common::Coroutine::Resume(m_accept_cor.get());
+  common::Coroutine::Resume(accpet_coroutine.get());
 
-  // m_timer.reset(m_main_reactor->getTimer());
+  // timer_.reset(main_reactor_->getTimer());
 
-  // m_timer_event = std::make_shared<TimerEvent>(10000, true,
+  // timer_event_ = std::make_shared<TimerEvent>(10000, true,
   //   std::bind(&TcpServer::MainLoopTimerFunc, this));
 
-  // m_timer->addTimerEvent(m_timer_event);
+  // timer_->addTimerEvent(timer_event_);
 
-  // m_time_wheel = std::make_shared<TcpTimeWheel>(m_main_reactor, 6, 10);
+  // time_wheel_ = std::make_shared<TcpTimeWheel>(main_reactor_, 6, 10);
 
-  m_main_reactor->loop();
+  main_reactor_->loop();
 }
 
 TcpServer::~TcpServer() {
-  common::GetCoroutinePool()->returnCoroutine(m_accept_cor->getCorId());
+  common::GetCoroutinePool()->returnCoroutine(accpet_coroutine->getCorId());
   LOG(DEBUG) << "~TcpServer";
 }
 
-NetAddress::ptr TcpServer::getPeerAddr() { return m_acceptor->getPeerAddr(); }
+NetAddress::ptr TcpServer::getPeerAddr() { return acceptor_->getPeerAddr(); }
 
 void TcpServer::MainAcceptCorFunc() {
   LOG(DEBUG) << "enable Hook here";
   // net::enableHook();
 
-  m_acceptor->init();
-  while (!m_is_stop_accept) {
-    int fd = m_acceptor->toAccept();
+  acceptor_->init();
+  while (!stop_accept) {
+    int fd = acceptor_->toAccept();
     if (fd == -1) {
       LOG(ERROR) << "accept ret -1 error, return, to yield";
       common::Coroutine::Yield();
       continue;
     }
-    IOThread* io_thread = m_io_pool->getIOThread();
+    IOThread* io_thread = io_pool_->getIOThread();
     auto cb = [this, io_thread, fd]() { io_thread->addClient(this, fd); };
     io_thread->getReactor()->addTask(cb);
-    m_tcp_counts++;
-    LOG(DEBUG) << "current tcp connection count is [" << m_tcp_counts << "]";
+    tcp_counts_++;
+    LOG(DEBUG) << "current tcp connection count is [" << tcp_counts_ << "]";
   }
 }
 
@@ -153,8 +153,8 @@ void TcpServer::MainAcceptCorFunc() {
 //	return m_dispatcher.get();
 // }
 
-void TcpServer::addCoroutine(common::Coroutine::ptr cor) {
-  m_main_reactor->addCoroutine(cor);
+void TcpServer::AddCoroutine(common::Coroutine::ptr cor) {
+  main_reactor_->addCoroutine(cor);
 }
 
 }  // namespace net

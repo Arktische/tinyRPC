@@ -18,17 +18,17 @@ class AbstractSlot {
   typedef std::shared_ptr<T> sharedPtr;
 
   AbstractSlot(weakPtr ptr, std::function<void(sharedPtr)> cb)
-      : m_weak_ptr(ptr), m_cb(cb) {}
+      : weak_ptr_(ptr), cb_(cb) {}
   ~AbstractSlot() {
-    sharedPtr ptr = m_weak_ptr.lock();
+    sharedPtr ptr = weak_ptr_.lock();
     if (ptr) {
-      m_cb(ptr);
+      cb_(ptr);
     }
   }
 
  private:
-  weakPtr m_weak_ptr;
-  std::function<void(sharedPtr)> m_cb;
+  weakPtr weak_ptr_;
+  std::function<void(sharedPtr)> cb_;
 };
 class TcpTimeWheel {
  public:
@@ -40,17 +40,17 @@ class TcpTimeWheel {
 
   ~TcpTimeWheel();
 
-  void fresh(TcpConnectionSlot::ptr slot);
+  void fresh(const TcpConnectionSlot::ptr& slot);
 
   void loopFunc();
 
  private:
-  Reactor* m_reactor{nullptr};
-  int m_bucket_count{0};
-  int m_inteval{0};  // second
+  Reactor* reactor_{nullptr};
+  int bucket_count_{0};
+  int interval_{0};  // second
 
-  TimerEvent::ptr m_event;
-  std::queue<std::vector<TcpConnectionSlot::ptr>> m_wheel;
+  TimerEvent::ptr event_;
+  std::queue<std::vector<TcpConnectionSlot::ptr>> wheel_;
 };
 
 }  // namespace net

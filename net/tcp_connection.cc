@@ -1,11 +1,13 @@
 #include "tcp_connection.h"
 
-#include <string.h>
+#include <common/coroutine/coroutine_pool.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cstring>
+#include <utility>
+
 #include "coroutine_hook.h"
-#include <common/coroutine/coroutine_pool.h>
 #include "tcp_client.h"
 #include "tcp_conn_timer.h"
 #include "tcp_server.h"
@@ -15,74 +17,73 @@ namespace net {
 
 TcpConnection::TcpConnection(net::TcpServer* tcp_svr, net::IOThread* io_thread,
                              int fd, int buff_size, NetAddress::ptr peer_addr)
-    : m_io_thread(io_thread),
-      m_fd(fd),
-      m_state(Connected),
-      m_connection_type(ServerConnection),
-      m_peer_addr(peer_addr) {
-  m_reactor = m_io_thread->getReactor();
+    : io_thread_(io_thread),
+      fd_(fd),
+      state_(Connected),
+      conn_type_(ServerConnection),
+      peer_addr_(std::move(peer_addr)) {
+  reactor_ = io_thread_->getReactor();
 
   assert(tcp_svr != nullptr);
-  m_tcp_svr = tcp_svr;
+  tcp_svr_ = tcp_svr;
 
-  m_fd_event = FdEventContainer::GetFdContainer()->getFdEvent(fd);
-  m_fd_event->setReactor(m_reactor);
+  fd_event_ = FdEventContainer::GetFdContainer()->getFdEvent(fd);
+  fd_event_->setReactor(reactor_);
   initBuffer(buff_size);
 
-  m_loop_cor = common::GetCoroutinePool()->getCoroutineInstanse();
-  m_loop_cor->setCallBack(
-      std::bind(&TcpConnection::MainServerLoopCorFunc, this));
+  loop_coroutine_ = common::GetCoroutinePool()->getCoroutineInstanse();
+  loop_coroutine_->setCallBack([this] { MainServerLoopCorFunc(); });
 
-  m_reactor->addCoroutine(m_loop_cor);
+  reactor_->addCoroutine(loop_coroutine_);
 
   LOG(DEBUG) << "succ create tcp connection";
 }
 
 TcpConnection::TcpConnection(net::TcpClient* tcp_cli, net::Reactor* reactor,
                              int fd, int buff_size, NetAddress::ptr peer_addr)
-    : m_fd(fd),
-      m_state(NotConnected),
-      m_connection_type(ClientConnection),
-      m_peer_addr(peer_addr) {
+    : fd_(fd),
+      state_(NotConnected),
+      conn_type_(ClientConnection),
+      peer_addr_(std::move(peer_addr)) {
   assert(reactor != nullptr);
-  m_reactor = reactor;
+  reactor_ = reactor;
 
   assert(tcp_cli != nullptr);
-  m_tcp_cli = tcp_cli;
+  tcp_cli_ = tcp_cli;
 
-  m_fd_event = FdEventContainer::GetFdContainer()->getFdEvent(fd);
-  m_fd_event->setReactor(m_reactor);
+  fd_event_ = FdEventContainer::GetFdContainer()->getFdEvent(fd);
+  fd_event_->setReactor(reactor_);
   initBuffer(buff_size);
 
   LOG(DEBUG) << "succ create tcp connection[NotConnected]";
 }
 
 void TcpConnection::registerToTimeWheel() {
-  auto cb = [](TcpConnection::ptr conn) { conn->shutdownConnection(); };
+  auto cb = [](const TcpConnection::ptr& conn) { conn->shutdownConnection(); };
   TcpTimeWheel::TcpConnectionSlot::ptr tmp =
       std::make_shared<AbstractSlot<TcpConnection>>(shared_from_this(), cb);
-  m_weak_slot = tmp;
-  m_io_thread->getTimeWheel()->fresh(tmp);
+  weak_slot_ = tmp;
+  io_thread_->getTimeWheel()->fresh(tmp);
 }
 
-void TcpConnection::setUpClient() { m_state = Connected; }
+void TcpConnection::setUpClient() { state_ = Connected; }
 
 TcpConnection::~TcpConnection() {
-  if (m_connection_type == ServerConnection) {
-    common::GetCoroutinePool()->returnCoroutine(m_loop_cor->getCorId());
+  if (conn_type_ == ServerConnection) {
+    common::GetCoroutinePool()->returnCoroutine(loop_coroutine_->getCorId());
   }
 
-  LOG(DEBUG) << "~TcpConnection, fd=" << m_fd;
+  LOG(DEBUG) << "~TcpConnection, fd=" << fd_;
 }
 
 void TcpConnection::initBuffer(int size) {
   // 初始化缓冲区大小
-  m_write_buffer = std::make_shared<TcpBuffer>(size);
-  m_read_buffer = std::make_shared<TcpBuffer>(size);
+  write_buffer_ = std::make_shared<TcpBuffer>(size);
+  read_buffer_ = std::make_shared<TcpBuffer>(size);
 }
 
 void TcpConnection::MainServerLoopCorFunc() {
-  while (!m_stop) {
+  while (!stop_) {
     input();
     rcb_(shared_from_this());
     // execute();
@@ -92,31 +93,28 @@ void TcpConnection::MainServerLoopCorFunc() {
 }
 
 void TcpConnection::input() {
-  if (m_state == Closed || m_state == NotConnected) {
+  if (state_ == Closed || state_ == NotConnected) {
     return;
   }
   bool read_all = false;
   bool close_flag = false;
   int count = 0;
   while (!read_all) {
-    if (m_read_buffer->writeAble() == 0) {
-      m_read_buffer->resizeBuffer(2 * m_read_buffer->getSize());
+    if (read_buffer_->writeAble() == 0) {
+      read_buffer_->resizeBuffer(2 * read_buffer_->getSize());
     }
 
-    int read_count = m_read_buffer->writeAble();
-    int write_index = m_read_buffer->writeIndex();
+    int read_count = read_buffer_->writeAble();
+    int write_index = read_buffer_->writeIndex();
 
-    LOG(DEBUG) << "m_read_buffer size="
-               << m_read_buffer->getBufferVector().size()
-               << "rd=" << m_read_buffer->readIndex()
-               << "wd=" << m_read_buffer->writeIndex();
-    int rt =
-        read_hook(m_fd, &(m_read_buffer->m_buffer[write_index]), read_count);
-    m_read_buffer->recycleWrite(rt);
-    LOG(DEBUG) << "m_read_buffer size="
-               << m_read_buffer->getBufferVector().size()
-               << "rd=" << m_read_buffer->readIndex()
-               << "wd=" << m_read_buffer->writeIndex();
+    LOG(DEBUG) << "read_buffer_ size=" << read_buffer_->getBufferVector().size()
+               << "rd=" << read_buffer_->readIndex()
+               << "wd=" << read_buffer_->writeIndex();
+    int rt = read_hook(fd_, &(read_buffer_->buffer_[write_index]), read_count);
+    read_buffer_->recycleWrite(rt);
+    LOG(DEBUG) << "read_buffer_ size=" << read_buffer_->getBufferVector().size()
+               << "rd=" << read_buffer_->readIndex()
+               << "wd=" << read_buffer_->writeIndex();
 
     LOG(DEBUG) << "read data back";
     count += rt;
@@ -150,11 +148,11 @@ void TcpConnection::input() {
     LOG(ERROR) << "not read all data in socket buffer";
   }
   LOG(INFO) << "recv [" << count << "] bytes data from ["
-            << m_peer_addr->toString() << "], fd [" << m_fd << "]";
-  if (m_connection_type == ServerConnection) {
-    TcpTimeWheel::TcpConnectionSlot::ptr tmp = m_weak_slot.lock();
+            << peer_addr_->toString() << "], fd [" << fd_ << "]";
+  if (conn_type_ == ServerConnection) {
+    TcpTimeWheel::TcpConnectionSlot::ptr tmp = weak_slot_.lock();
     if (tmp) {
-      m_io_thread->getTimeWheel()->fresh(tmp);
+      io_thread_->getTimeWheel()->fresh(tmp);
     }
   }
 }
@@ -163,18 +161,18 @@ void TcpConnection::input() {
 //   LOG(DEBUG) << "begin to do execute";
 //
 //   // it only server do this
-//   while(m_read_buffer->readAble() > 0) {
+//   while(read_buffer_->readAble() > 0) {
 //     TinyPbStruct pb_struct;
-//     m_codec->decode(m_read_buffer.get(), &pb_struct);
+//     m_codec->decode(read_buffer_.get(), &pb_struct);
 //     // LOG(DEBUG) << "parse service_name=" << pb_struct.service_full_name;
 //     if (!pb_struct.decode_succ) {
 //       break;
 //     }
-//     if (m_connection_type == ServerConnection) {
+//     if (conn_type_ == ServerConnection) {
 //       LOG(DEBUG) << "to dispatch this package";
-//       m_tcp_svr->getDispatcher()->dispatch(&pb_struct, this);
+//       tcp_svr_->getDispatcher()->dispatch(&pb_struct, this);
 //       LOG(DEBUG) << "contine parse next package";
-//     } else if (m_connection_type == ClientConnection) {
+//     } else if (conn_type_ == ClientConnection) {
 //       // TODO:
 //       m_client_res_data_queue.push(pb_struct);
 //     }
@@ -185,75 +183,74 @@ void TcpConnection::input() {
 
 void TcpConnection::output() {
   while (true) {
-    if (m_state != Connected) {
+    if (state_ != Connected) {
       break;
     }
 
-    if (m_write_buffer->readAble() == 0) {
-      LOG(DEBUG) << "app buffer of fd[" << m_fd
+    if (write_buffer_->readAble() == 0) {
+      LOG(DEBUG) << "app buffer of fd[" << fd_
                  << "] no data to write, to yiled this coroutine";
       break;
     }
 
-    int total_size = m_write_buffer->readAble();
-    int read_index = m_write_buffer->readIndex();
-    int rt =
-        write_hook(m_fd, &(m_write_buffer->m_buffer[read_index]), total_size);
+    int total_size = write_buffer_->readAble();
+    int read_index = write_buffer_->readIndex();
+    int rt = write_hook(fd_, &(write_buffer_->buffer_[read_index]), total_size);
     // LOG(INFO) << "write end";
     if (rt <= 0) {
       LOG(ERROR) << "write empty, error=" << strerror(errno);
     }
 
     LOG(DEBUG) << "succ write " << rt << " bytes";
-    m_write_buffer->recycleRead(rt);
-    LOG(DEBUG) << "recycle write index =" << m_write_buffer->writeIndex()
-               << ", read_index =" << m_write_buffer->readIndex()
-               << "readable = " << m_write_buffer->readAble();
-    LOG(INFO) << "send[" << rt << "] bytes data to [" << m_peer_addr->toString()
-              << "], fd [" << m_fd << "]";
-    if (m_write_buffer->readAble() <= 0) {
+    write_buffer_->recycleRead(rt);
+    LOG(DEBUG) << "recycle write index =" << write_buffer_->writeIndex()
+               << ", read_index =" << write_buffer_->readIndex()
+               << "readable = " << write_buffer_->readAble();
+    LOG(INFO) << "send[" << rt << "] bytes data to [" << peer_addr_->toString()
+              << "], fd [" << fd_ << "]";
+    if (write_buffer_->readAble() <= 0) {
       // LOG(INFO) << "send all data, now unregister write event on reactor and
       // yield Coroutine";
       LOG(INFO) << "send all data, now unregister write event and break";
-      m_fd_event->delListenEvents(IOEvent::WRITE);
+      fd_event_->delListenEvents(IOEvent::WRITE);
       break;
     }
   }
 }
 
 void TcpConnection::clearClient() {
-  if (m_state == Closed) {
+  if (state_ == Closed) {
     LOG(DEBUG) << "this client has closed";
     return;
   }
   // first unregister epoll event
-  m_fd_event->unregisterFromReactor();
+  fd_event_->unregisterFromReactor();
 
   // stop read and write cor
-  m_stop = true;
+  stop_ = true;
 
-  close(m_fd_event->getFd());
-  m_state = Closed;
+  close(fd_event_->getFd());
+  state_ = Closed;
 }
 
 void TcpConnection::shutdownConnection() {
-  if (m_state == Closed || m_state == NotConnected) {
+  if (state_ == Closed || state_ == NotConnected) {
     LOG(DEBUG) << "this client has closed";
     return;
   }
-  m_state = HalfClosing;
-  LOG(INFO) << "shutdown conn[" << m_peer_addr->toString() << "]";
+  state_ = HalfClosing;
+  LOG(INFO) << "shutdown conn[" << peer_addr_->toString() << "]";
   // call sys shutdown to send FIN
   // wait client done something, client will send FIN
   // and fd occur read event but byte count is 0
   // then will call clearClient to set CLOSED
   // IOThread::MainLoopTimerFunc will delete CLOSED connection
-  shutdown(m_fd_event->getFd(), SHUT_RDWR);
+  shutdown(fd_event_->getFd(), SHUT_RDWR);
 }
 
-TcpBuffer* TcpConnection::getInBuffer() { return m_read_buffer.get(); }
+TcpBuffer* TcpConnection::getInBuffer() { return read_buffer_.get(); }
 
-TcpBuffer* TcpConnection::getOutBuffer() { return m_write_buffer.get(); }
+TcpBuffer* TcpConnection::getOutBuffer() { return write_buffer_.get(); }
 
 // bool TcpConnection::getResPackageData(TinyPbStruct& pb_struct) {
 //   if (!m_client_res_data_queue.empty()) {
@@ -270,9 +267,7 @@ TcpBuffer* TcpConnection::getOutBuffer() { return m_write_buffer.get(); }
 //   return m_codec.get();
 // }
 
-TcpConnectionState TcpConnection::getState() const { return m_state; }
-void TcpConnection::execute() {
-
-}
+TcpConnectionState TcpConnection::getState() const { return state_; }
+void TcpConnection::execute() {}
 
 }  // namespace net

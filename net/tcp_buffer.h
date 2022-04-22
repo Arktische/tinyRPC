@@ -45,12 +45,12 @@ class TcpBuffer {
   void adjustBuffer();
 
  private:
-  int m_read_index{0};
-  int m_write_index{0};
-  int m_size{0};
+  int read_index_{0};
+  int write_index_{0};
+  int size_{0};
 
  public:
-  std::vector<char> m_buffer;
+  std::vector<char> buffer_;
 };
 
 }  // namespace net

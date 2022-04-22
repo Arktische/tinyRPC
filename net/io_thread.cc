@@ -5,8 +5,8 @@
 
 #include "common/coroutine/coroutine.h"
 #include "reactor.h"
-#include "tcp_connection.h"
 #include "tcp_conn_timer.h"
+#include "tcp_connection.h"
 #include "tcp_server.h"
 
 namespace net {
@@ -14,35 +14,34 @@ namespace net {
 static thread_local Reactor* t_reactor_ptr = nullptr;
 
 IOThread::IOThread() {
-  pthread_create(&m_thread, nullptr, &IOThread::main, this);
+  pthread_create(&thread_, nullptr, &IOThread::main, this);
 }
 
 IOThread::~IOThread() {
-  m_reactor->stop();
-  pthread_join(m_thread, nullptr);
+  reactor_->stop();
+  pthread_join(thread_, nullptr);
 
-  if (m_reactor != nullptr) {
-    delete m_reactor;
-    m_reactor = nullptr;
+  if (reactor_ != nullptr) {
+    delete reactor_;
+    reactor_ = nullptr;
   }
 }
 
-Reactor* IOThread::getReactor() { return m_reactor; }
+Reactor* IOThread::getReactor() { return reactor_; }
 
-TcpTimeWheel::ptr IOThread::getTimeWheel() { return m_time_wheel; }
+TcpTimeWheel::ptr IOThread::getTimeWheel() { return time_wheel_; }
 
 void* IOThread::main(void* arg) {
   assert(t_reactor_ptr == nullptr);
   t_reactor_ptr = new Reactor();
   IOThread* thread = static_cast<IOThread*>(arg);
-  thread->m_reactor = t_reactor_ptr;
+  thread->reactor_ = t_reactor_ptr;
 
-  thread->m_timer_event = std::make_shared<TimerEvent>(
+  thread->timer_event_ = std::make_shared<TimerEvent>(
       10000, true, std::bind(&IOThread::MainLoopTimerFunc, thread));
 
-  thread->getReactor()->getTimer()->addTimerEvent(thread->m_timer_event);
-  thread->m_time_wheel =
-      std::make_shared<TcpTimeWheel>(thread->m_reactor, 2, 10);
+  thread->getReactor()->getTimer()->addTimerEvent(thread->timer_event_);
+  thread->time_wheel_ = std::make_shared<TcpTimeWheel>(thread->reactor_, 2, 10);
 
   common::Coroutine::GetCurrentCoroutine();
 
@@ -52,8 +51,8 @@ void* IOThread::main(void* arg) {
 }
 
 bool IOThread::addClient(TcpServer* tcp_svr, int fd) {
-  auto it = m_clients.find(fd);
-  if (it != m_clients.end()) {
+  auto it = clients_.find(fd);
+  if (it != clients_.end()) {
     TcpConnection::ptr s_conn = it->second;
     if (s_conn && s_conn.use_count() > 0 && s_conn->getState() != Closed) {
       LOG(ERROR)
@@ -73,7 +72,7 @@ bool IOThread::addClient(TcpServer* tcp_svr, int fd) {
   } else {
     TcpConnection::ptr conn = std::make_shared<TcpConnection>(
         tcp_svr, this, fd, 128, tcp_svr->getPeerAddr());
-    m_clients.insert(std::make_pair(fd, conn));
+    clients_.insert(std::make_pair(fd, conn));
     conn->registerToTimeWheel();
   }
   return true;
@@ -84,8 +83,8 @@ void IOThread::MainLoopTimerFunc() {
 
   // delete Closed TcpConnection per loop
   // for free memory
-  LOG(DEBUG) << "m_clients.size=" << m_clients.size();
-  for (auto& i : m_clients) {
+  LOG(DEBUG) << "clients_.size=" << clients_.size();
+  for (auto& i : clients_) {
     // TcpConnection::ptr s_conn = i.second;
     // DebugLog << "state = " << s_conn->getState();
     if (i.second && i.second.use_count() > 0 &&
@@ -98,18 +97,18 @@ void IOThread::MainLoopTimerFunc() {
   }
 }
 
-IOThreadPool::IOThreadPool(int size) : m_size(size) {
-  m_io_threads.resize(size);
+IOThreadPool::IOThreadPool(int size) : size_(size) {
+  io_threads_.resize(size);
   for (int i = 0; i < size; ++i) {
-    m_io_threads[i] = std::make_shared<IOThread>();
+    io_threads_[i] = std::make_shared<IOThread>();
   }
 }
 
 IOThread* IOThreadPool::getIOThread() {
-  if (m_index == m_size || m_index == -1) {
-    m_index = 0;
+  if (index_ == size_ || index_ == -1) {
+    index_ = 0;
   }
-  return m_io_threads[m_index++].get();
+  return io_threads_[index_++].get();
 }
 
 }  // namespace net

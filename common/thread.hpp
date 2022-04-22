@@ -11,11 +11,11 @@
 #include <thread>
 
 namespace common {
-class Thread : public std::jthread {
+class Thread : public std::thread {
  public:
   template <class F, class... Args>
   Thread(const std::string_view id, F&& f, Args&&... args)
-      : std::jthread(
+      : std::thread(
             set, id,
             std::bind(std::forward<F>(f), std::forward<Args>(args)...)) {}
 

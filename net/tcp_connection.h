@@ -1,13 +1,15 @@
 #ifndef net_NET_TCP_TCP_CONNECTION_H
 #define net_NET_TCP_TCP_CONNECTION_H
 
+#include <common/coroutine/coroutine.h>
+
 #include <functional>
 #include <memory>
 #include <queue>
 #include <vector>
 
 #include <common/log.hpp>
-#include <common/coroutine/coroutine.h>
+
 #include "fd_event.h"
 #include "io_thread.h"
 #include "net_address.h"
@@ -69,47 +71,39 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void MainServerLoopCorFunc();
 
   void input();
-  void OnRead(std::function<void(ptr)> f) {
-    rcb_ = std::move(f);
-  }
+  void OnRead(std::function<void(ptr)> f) { rcb_ = std::move(f); }
 
   void execute();
 
   void output();
-  void OnWrite(std::function<void(ptr)> f) {
-    wcb_ = std::move(f);
-  }
+  void OnWrite(std::function<void(ptr)> f) { wcb_ = std::move(f); }
 
  private:
   void clearClient();
 
  private:
-  TcpServer* m_tcp_svr{nullptr};
-  TcpClient* m_tcp_cli{nullptr};
-  IOThread* m_io_thread{nullptr};
-  Reactor* m_reactor{nullptr};
+  TcpServer* tcp_svr_{nullptr};
+  TcpClient* tcp_cli_{nullptr};
+  IOThread* io_thread_{nullptr};
+  Reactor* reactor_{nullptr};
 
-  int m_fd{-1};
-  TcpConnectionState m_state{TcpConnectionState::Connected};
-  ConnectionType m_connection_type{ServerConnection};
+  int fd_{-1};
+  TcpConnectionState state_{TcpConnectionState::Connected};
+  ConnectionType conn_type_{ServerConnection};
 
-  NetAddress::ptr m_peer_addr;
+  NetAddress::ptr peer_addr_;
 
-  TcpBuffer::ptr m_read_buffer;
-  TcpBuffer::ptr m_write_buffer;
+  TcpBuffer::ptr read_buffer_;
+  TcpBuffer::ptr write_buffer_;
 
-  common::Coroutine::ptr m_loop_cor;
+  common::Coroutine::ptr loop_coroutine_;
 
-  //  TinyPbCodeC::ptr m_codec;
+  FdEvent::ptr fd_event_;
+  bool stop_{false};
 
-  FdEvent::ptr m_fd_event;
-  bool m_stop{false};
-
-  //  std::queue<TinyPbStruct> m_client_res_data_queue;
-
-  std::weak_ptr<AbstractSlot<TcpConnection>> m_weak_slot;
+  std::weak_ptr<AbstractSlot<TcpConnection>> weak_slot_;
   std::function<void(ptr)> rcb_;
-  std::function<void(ptr)> wcb_;  
+  std::function<void(ptr)> wcb_;
 };
 
 }  // namespace net
