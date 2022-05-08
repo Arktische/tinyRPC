@@ -17,11 +17,6 @@ target_link_libraries(
         ${GTEST_LIBRARIES}
 )
 
-target_compile_options(
-        common_test
-        PRIVATE -fconcepts
-)
-
 add_executable(
         common_bench
         common_bench.cc
@@ -40,3 +35,5 @@ include(GoogleTest)
 gtest_discover_tests(
         common_test
 )
+
+add_library(common common.cc)

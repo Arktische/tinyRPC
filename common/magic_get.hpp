@@ -299,8 +299,8 @@ constexpr sequence_tuple::tuple<> as_tuple_impl(
 template <class T>
 constexpr auto as_tuple() noexcept {
   typedef typename std::remove_cv<T>::type type;
-
-  static_assert(std::is_pod<type>::value, "Not applyable");
+  static_assert(std::is_standard_layout<type>::value && std::is_trivial<type>::value, "Not applyable");
+  // static_assert(std::is_pod<type>::value, "Not applyable");
   static_assert(!std::is_reference<type>::value, "Not applyable");
   constexpr auto res = as_tuple_impl<
       type>(array_of_type_ids_to_index_sequence<T>(
