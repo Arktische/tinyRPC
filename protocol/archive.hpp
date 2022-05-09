@@ -121,19 +121,6 @@ class SwapByte<double, 8> : public SwapByteBase {
 };
 }  // namespace endian
 namespace codec {
-    template <typename Tuple, typename F>
-  constexpr decltype(auto) for_each(Tuple&& tuple, F&& f) {
-    return []<std::size_t... I>(Tuple && tuple, F && f,
-                                std::index_sequence<I...>) {
-      (f(common::get<I>(tuple)), ...);
-      return f;
-    }
-    (std::forward<Tuple>(tuple), std::forward<F>(f),
-     std::make_index_sequence<
-         common::tuple_size<std::remove_reference<Tuple>>()>{});
-  }
-}
-namespace codec {
 template <typename streamT>
 class CodecArchive {
  public:
@@ -153,26 +140,6 @@ class CodecArchive {
   }
 
  public:
-
-
-  template <typename T>
-  const CodecArchive& operator&(const T& v) const {
-    for_each(v, [&](auto & val){
-      *this&val;
-    });
-    // auto tp = detail::as_tuple<T>();
-    // common::tp_for_each([&](auto& elem){
-    //   *this<<elem;
-    // },tp);
-    // std::apply([&](auto&&... args) { ((*this << args), ...); }, tp);
-    return *this;
-  }
-
-  // template <typename T>
-  // const CodecArchive& operator&(const T& v) const {
-  //   ((T&)v).Serialize(*this);
-  //   return *this;
-  // }
 
   template <typename T, size_t N>
   CodecArchive& operator&(T (&v)[N]) {

@@ -2,7 +2,7 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-namespace sequence_tuple {
+namespace common::schema::sequence_tuple {
 template <std::size_t N, class T>
 struct base_from_member {
   T value;
@@ -97,7 +97,7 @@ using tuple_element =
 
 }  // namespace sequence_tuple
 
-namespace detail {
+namespace common::schema::detail {
 
 template <class T, std::size_t N>
 struct array {  // CLANG: misses constexpr on operator[]
@@ -299,7 +299,7 @@ constexpr sequence_tuple::tuple<> as_tuple_impl(
 template <class T>
 constexpr auto as_tuple() noexcept {
   typedef typename std::remove_cv<T>::type type;
-  static_assert(std::is_pod_v<type>, "Not applyable");
+  static_assert(std::is_pod<type>::value, "Not applyable");
   // static_assert(std::is_pod<type>::value, "Not applyable");
   static_assert(!std::is_reference<type>::value, "Not applyable");
   constexpr auto res = as_tuple_impl<
@@ -318,7 +318,7 @@ constexpr auto as_tuple() noexcept {
 }
 }  // namespace detail
 
-namespace common {
+namespace common::schema {
 template <std::size_t I, class T>
 decltype(auto) get(const T& val) noexcept {
   //    decltype(detail::as_tuple<T>())* t1 =

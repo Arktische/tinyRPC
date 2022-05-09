@@ -26,7 +26,7 @@ struct AnyType {
 
 #if __cplusplus >= 202002L
 template <typename T>
-consteval size_t CountMember(auto&&... Args) {
+constexpr size_t CountMember(auto&&... Args) {
   if constexpr (!requires { T{Args...}; }) {  // (1)
     return sizeof...(Args) - 1;
   } else {

@@ -1,6 +1,6 @@
 #pragma once
 #include <tuple>
-namespace common {
+namespace common::tuple {
 
 template <int...>
 struct IndexTuple {};
@@ -100,4 +100,15 @@ void tp_for_each(Func&& f, std::tuple<Args...>&& tup) {
                   forward<std::tuple<Args...>>(tup));
 }
 
-}  // namespace common
+template <class Tuple, class F>
+constexpr decltype(auto) for_each(Tuple&& tuple, F&& f) {
+  return
+      []<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>) {
+    (f(std::get<I>(tuple)), ...);
+    return f;
+  }
+  (std::forward<Tuple>(tuple), std::forward<F>(f),
+   std::make_index_sequence<
+       std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+}
+}  // namespace common::tuple
