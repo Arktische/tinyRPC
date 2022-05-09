@@ -1,5 +1,4 @@
-#ifndef TINYRPC_CODEC_ARCHIVE_HPP
-#define TINYRPC_CODEC_ARCHIVE_HPP
+#pragma once
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -18,7 +17,7 @@
 
 #include <common/magic_get.hpp>
 #include <common/trait.hpp>
-
+#include <common/tuple_util.hpp>
 namespace endian {
 class SwapByteBase {
  public:
@@ -121,7 +120,19 @@ class SwapByte<double, 8> : public SwapByteBase {
   }
 };
 }  // namespace endian
-
+namespace codec {
+    template <typename Tuple, typename F>
+  constexpr decltype(auto) for_each(Tuple&& tuple, F&& f) {
+    return []<std::size_t... I>(Tuple && tuple, F && f,
+                                std::index_sequence<I...>) {
+      (f(common::get<I>(tuple)), ...);
+      return f;
+    }
+    (std::forward<Tuple>(tuple), std::forward<F>(f),
+     std::make_index_sequence<
+         common::tuple_size<std::remove_reference<Tuple>>()>{});
+  }
+}
 namespace codec {
 template <typename streamT>
 class CodecArchive {
@@ -142,18 +153,26 @@ class CodecArchive {
   }
 
  public:
-  template <typename T>
-  CodecArchive& operator&(T& v) {
-    auto tp = detail::as_tuple<T>();
-    std::apply([&](auto&&... args) { ((*this << args), ...); }, tp);
-    return *this;
-  }
+
 
   template <typename T>
   const CodecArchive& operator&(const T& v) const {
-    ((T&)v).Serialize(*this);
+    for_each(v, [&](auto & val){
+      *this&val;
+    });
+    // auto tp = detail::as_tuple<T>();
+    // common::tp_for_each([&](auto& elem){
+    //   *this<<elem;
+    // },tp);
+    // std::apply([&](auto&&... args) { ((*this << args), ...); }, tp);
     return *this;
   }
+
+  // template <typename T>
+  // const CodecArchive& operator&(const T& v) const {
+  //   ((T&)v).Serialize(*this);
+  //   return *this;
+  // }
 
   template <typename T, size_t N>
   CodecArchive& operator&(T (&v)[N]) {
@@ -296,4 +315,5 @@ class CodecArchive {
   streamT& stream_;
 };
 }  // namespace codec
-#endif  // TINYRPC_CODEC_ARCHIVE_HPP
+
+
