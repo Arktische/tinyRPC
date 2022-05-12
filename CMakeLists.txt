@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include(FetchContent)
 FetchContent_Declare(
         googletest
-        URL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip
+        URL https://hub.fastgit.xyz/google/googletest/archive/refs/tags/release-1.11.0.zip
 )
 
 FetchContent_Declare(
         benchmark
-        URL https://github.com/google/benchmark/archive/refs/tags/v1.6.1.zip
+        URL https://hub.fastgit.xyz/google/benchmark/archive/refs/tags/v1.6.1.zip
 )
 
 #For Windows: Prevent overriding the parent project's compiler/linker settings
