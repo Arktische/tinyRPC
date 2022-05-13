@@ -44,17 +44,17 @@ TEST(protocol_test, test_tuple_size) {
   constexpr std::size_t size = common::schema::tuple_size<foo>();
 }
 
-message(foo, feild(i0), feild(i1), feild(i2), feild(i3),
-        feild(ar));
+message(foo, export(i0), export(i1), export(i2), export(i3),
+        export(ar));
 TEST(protocol_test, test_schema) {
   foo f{'a', 11, 12, 13, {'b', 'c'}, 16, 17, 0, 0, 0, 30.0};
   foo f2{'c', 999999, 12, 13, {'d', 'c'}, 16, 17, 0, 0, 0, 30.0};
-  auto tp = std::make_tuple(&foo::i0, &foo::i1, &foo::i2, &foo::i3, &foo::ar);
+  auto tp = std::make_tuple(f.i0, f.i1, f.i2, f.i3, f.ar);
 
   common::tuple::for_each(tp, [](auto& elem) { std::cout << elem<<','; });
 
   
-//   foreach (f, [](auto&& feildName, auto&& value) {
-//     std::cout << feildName << ":" << value << ",\n";
-//   });
+  foreach (f, [](auto&& feildName, auto&& value) {
+    std::cout << feildName << ":" << value << ",\n";
+  });
 }

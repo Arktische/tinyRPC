@@ -35,5 +35,3 @@ include(GoogleTest)
 gtest_discover_tests(
         common_test
 )
-
-add_library(common common.cc)
