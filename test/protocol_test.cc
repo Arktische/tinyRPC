@@ -8,9 +8,11 @@
 #include <protocol/archive.hpp>
 #include <protocol/schema.hpp>
 struct A {
-  int a{2};
-  char b{'c'};
-  char* c{nullptr};
+  char i0;
+  unsigned int i1;
+  unsigned short i2;
+  unsigned long long i3;
+  unsigned char ar[2];
   std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
 };
 
@@ -41,20 +43,34 @@ TEST(protocol_test, test_archive) {
 
 TEST(protocol_test, test_tuple_size) {
   A a;
-  constexpr std::size_t size = common::schema::tuple_size<foo>();
+  // constexpr std::size_t size = common::schema::tuple_size<foo>();
 }
 
-message(foo, export(i0), export(i1), export(i2), export(i3),
-        export(ar));
+class B {
+  public:
+  int a{2};
+  char b{'c'};
+  char* c{nullptr};
+  std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
+};
+
+message(B,
+export(a),
+export(b),
+export(c)
+);
+
+message(foo,export(i0));
+
 TEST(protocol_test, test_schema) {
   foo f{'a', 11, 12, 13, {'b', 'c'}, 16, 17, 0, 0, 0, 30.0};
   foo f2{'c', 999999, 12, 13, {'d', 'c'}, 16, 17, 0, 0, 0, 30.0};
   auto tp = std::make_tuple(f.i0, f.i1, f.i2, f.i3, f.ar);
 
-  common::tuple::for_each(tp, [](auto& elem) { std::cout << elem<<','; });
+  common::tuple::for_each(tp, [](auto& elem) { std::cout << elem << ','; });
 
-  
-  foreach (f, [](auto&& feildName, auto&& value) {
-    std::cout << feildName << ":" << value << ",\n";
-  });
+  // foreach (f, [](auto&& feildName, auto&& value) {
+  //   std::cout << feildName << ":" << value << ",\n";
+  // })
+    
 }
