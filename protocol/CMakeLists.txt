@@ -13,3 +13,4 @@ include_directories(
 # set(LIBCLANG_LIBRARY libclang)
 
 add_library(protocol protocol.cc)
+target_compile_features(protocol PUBLIC cxx_std_20)

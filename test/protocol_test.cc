@@ -1,17 +1,21 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <ostream>
+#include <sstream>
 #include <tuple>
 #include <vector>
 
 #include <common/tuple_util.hpp>
 #include <protocol/archive.hpp>
+#include <protocol/rpc.hpp>
 #include <protocol/schema.hpp>
+#include "protocol/factory.hpp"
 struct A {
-  char i0;
-  unsigned int i1;
-  unsigned short i2;
-  unsigned long long i3;
+  char i0{'c'};
+  unsigned int i1{1};
+  unsigned short i2{2};
+  unsigned long long i3{3};
   unsigned char ar[2];
   std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
 };
@@ -47,20 +51,16 @@ TEST(protocol_test, test_tuple_size) {
 }
 
 class B {
-  public:
+ public:
   int a{2};
   char b{'c'};
   char* c{nullptr};
   std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
 };
 
-message(B,
-export(a),
-export(b),
-export(c)
-);
+message(B, export(a), export(b), export(c),export(vec));
 
-message(foo,export(i0));
+// message(foo,export(i0));
 
 TEST(protocol_test, test_schema) {
   foo f{'a', 11, 12, 13, {'b', 'c'}, 16, 17, 0, 0, 0, 30.0};
@@ -72,5 +72,19 @@ TEST(protocol_test, test_schema) {
   // foreach (f, [](auto&& feildName, auto&& value) {
   //   std::cout << feildName << ":" << value << ",\n";
   // })
-    
+}
+
+B GetB(A a) { std::cout<<"GetB called";return B{}; }
+
+message(A, export(i0), export(i1), export(i2), export(i3), export(ar),
+        export(vec));
+rpc(A, B, GetB, codec::CodecArchive<std::stringstream>);
+
+TEST(protocol_test, dispatch_test) {
+  A a;
+  auto ptr = dispatch("GetB", codec::CodecArchive<std::stringstream>);
+  std::stringstream ss;
+  codec::CodecArchive<std::stringstream> cdc(ss);
+  foreach(a,[&cdc](auto&&, auto&& value){cdc<<value;});
+  ptr->call(cdc);
 }
