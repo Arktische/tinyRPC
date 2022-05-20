@@ -28,13 +28,12 @@ class ObjectFactory {
   }
 };
 
-#define REGISTER_CLASS(class_name)                                     \
-  class class_name##Helper {                                           \
-   public:                                                             \
-    class_name##Helper() {                                             \
-      ObjectFactory::set(#class_name,                       \
-                                    class_name##Helper::creatObjFunc); \
+#define REGISTER_CLASS(class_name,class_type)                                     \
+  class class_type##Helper {                                           \
+   public:                                                               \
+    class_type##Helper() {                                             \
+      ObjectFactory::set(#class_name, class_type##Helper::creatObjFunc); \
     }                                                                  \
-    static void* creatObjFunc() { return new class_name; }             \
-  };                                                                   \
-  class_name##Helper class_name##helper
+    static void* creatObjFunc() { return new (class_type); }             \
+  };                                                                     \
+  class_type##Helper class_type##helper
