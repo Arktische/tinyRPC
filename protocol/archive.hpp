@@ -140,7 +140,6 @@ class CodecArchive {
   }
 
  public:
-
   template <typename T, size_t N>
   CodecArchive& operator&(T (&v)[N]) {
     uint32_t len;
@@ -282,5 +281,3 @@ class CodecArchive {
   streamT& stream_;
 };
 }  // namespace codec
-
-
