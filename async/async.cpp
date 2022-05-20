@@ -5,7 +5,6 @@
 #include "executor.hpp"
 #include "generator.hpp"
 #include "promise.hpp"
-#include "stop_signal.hpp"
 #include "sync_wait.hpp"
 #include "task.hpp"
 #include "thread_pool.hpp"
