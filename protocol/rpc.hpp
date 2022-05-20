@@ -15,7 +15,7 @@ struct RemoteProcedureBase {
       return codec_;                                                        \
     }                                                                       \
   };                                                                        \
-  REGISTER_CLASS(handler, __remote__##handler)
+  register_class(handler, __remote__##handler)
 
 #define dispatch(method_str, codec) \
   (static_cast<RemoteProcedureBase<codec>*>(ObjectFactory::create(method_str)))
