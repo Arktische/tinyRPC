@@ -3,8 +3,7 @@
 #include <iostream>
 
 namespace async {
-thread_pool::operation::operation(thread_pool& tp) noexcept
-    : pool_(tp) {}
+thread_pool::operation::operation(thread_pool& tp) noexcept : pool_(tp) {}
 
 auto thread_pool::operation::await_suspend(
     std::coroutine_handle<> awaiting_coroutine) noexcept -> void {

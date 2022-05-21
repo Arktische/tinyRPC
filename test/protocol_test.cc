@@ -1,12 +1,8 @@
 #include <gtest/gtest.h>
-
-#include <algorithm>
 #include <ostream>
 #include <sstream>
 #include <tuple>
 #include <vector>
-
-#include <common/tuple_util.hpp>
 #include <protocol/archive.hpp>
 #include <protocol/rpc.hpp>
 #include <protocol/schema.hpp>
@@ -64,13 +60,13 @@ B GetB(A a) {
   return B{};
 }
 
-rpc(A, B, GetB, codec::CodecArchive<std::stringstream>);
+rpc(A, B, GetB, codec::Binary<std::stringstream>);
 
 TEST(protocol_test, dispatch_test) {
   A a;
-  auto ptr = dispatch("GetB", codec::CodecArchive<std::stringstream>);
+  auto ptr = dispatch("GetB", codec::Binary<std::stringstream>);
   std::stringstream ss;
-  codec::CodecArchive<std::stringstream> cdc(ss);
+  codec::Binary<std::stringstream> cdc(ss);
   for_each(a, [&cdc](auto&&, auto&& value) { cdc << value; });
   ptr->call(cdc);
 }

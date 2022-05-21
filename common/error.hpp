@@ -1,9 +1,4 @@
-//
-// Created by tyx on 3/26/22.
-//
-
-#ifndef TINYRPC_ERROR_HPP
-#define TINYRPC_ERROR_HPP
+#pragma once
 #include <sys/epoll.h>
 #include <sys/errno.h>
 #include <sys/socket.h>
@@ -49,7 +44,5 @@ inline std::error_code make_error_code(OSError oerr) {
 }
 
 inline std::error_code make_error_code(NetError oerr) {
-  return {static_cast<int>(oerr), OSErrorCategory()};
+  return {static_cast<int>(oerr), NetErrorCategory()};
 }
-
-#endif  // TINYRPC_ERROR_HPP

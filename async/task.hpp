@@ -37,8 +37,7 @@ struct promise_base {
 
   static auto final_suspend() noexcept(true) { return final_awaitable{}; }
 
-  auto unhandled_exception() -> void { except_ptr_ = std::current_exception();
-  }
+  auto unhandled_exception() -> void { except_ptr_ = std::current_exception(); }
 
   auto continuation(std::coroutine_handle<> continuation) noexcept -> void {
     continuation_ = continuation;
@@ -208,7 +207,9 @@ class [[nodiscard]] task {
 
   auto promise() & -> promise_type& { return coroutine_.promise(); }
 
-  [[nodiscard]] auto promise() const& -> const promise_type& { return coroutine_.promise(); }
+  [[nodiscard]] auto promise() const& -> const promise_type& {
+    return coroutine_.promise();
+  }
   auto promise() && -> promise_type&& {
     return std::move(coroutine_.promise());
   }

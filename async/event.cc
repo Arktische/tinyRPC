@@ -1,6 +1,5 @@
 #include "event.hpp"
 
-
 namespace async {
 event::event(bool initially_set) noexcept
     : state_((initially_set) ? static_cast<void*>(this) : nullptr) {}

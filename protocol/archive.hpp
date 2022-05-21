@@ -122,26 +122,30 @@ class SwapByte<double, 8> : public SwapByteBase {
 }  // namespace endian
 namespace codec {
 template <typename streamT>
-class CodecArchive {
+class Binary {
+  using type = Binary;
+  using ref_type = type&;
+  using cref_type = const type&;
+
  public:
-  explicit CodecArchive(streamT& stream) : stream_(stream) {}
+  explicit Binary(streamT& stream) : stream_(stream) {}
 
  public:
   template <typename T>
-  const CodecArchive& operator<<(const T& v) const {
+  cref_type operator<<(const T& v) const {
     *this& v;
     return *this;
   }
 
   template <typename T>
-  CodecArchive& operator>>(T& v) {
+  ref_type operator>>(T& v) {
     *this& v;
     return *this;
   }
 
  public:
   template <typename T, size_t N>
-  CodecArchive& operator&(T (&v)[N]) {
+  ref_type operator&(T (&v)[N]) {
     uint32_t len;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -149,7 +153,7 @@ class CodecArchive {
   }
 
   template <typename T, size_t N>
-  const CodecArchive& operator&(const T (&v)[N]) const {
+  cref_type operator&(const T (&v)[N]) const {
     uint32_t len = N;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -157,7 +161,7 @@ class CodecArchive {
   }
 
 #define SERIALIZER_FOR_POD(type)                  \
-  CodecArchive& operator&(type& v) {              \
+  ref_type operator&(type& v) {              \
     stream_.read((char*)&v, sizeof(type));        \
     if (!stream_) {                               \
       throw std::runtime_error("malformed data"); \
@@ -165,7 +169,7 @@ class CodecArchive {
     v = Swap(v);                                  \
     return *this;                                 \
   }                                               \
-  const CodecArchive& operator&(type v) const {   \
+  cref_type operator&(type v) const {   \
     v = Swap(v);                                  \
     stream_.write((const char*)&v, sizeof(type)); \
     return *this;                                 \
@@ -187,7 +191,7 @@ class CodecArchive {
 
 #define SERIALIZER_FOR_STL(type)                                               \
   template <typename T>                                                        \
-  CodecArchive& operator&(type<T>& v) {                                        \
+  ref_type operator&(type<T>& v) {                                        \
     uint32_t len;                                                              \
     *this& len;                                                                \
     for (uint32_t i = 0; i < len; ++i) {                                       \
@@ -198,7 +202,7 @@ class CodecArchive {
     return *this;                                                              \
   }                                                                            \
   template <typename T>                                                        \
-  const CodecArchive& operator&(const type<T>& v) const {                      \
+  cref_type operator&(const type<T>& v) const {                      \
     uint32_t len = v.size();                                                   \
     *this& len;                                                                \
     for (typename type<T>::const_iterator it = v.begin(); it != v.end(); ++it) \
@@ -208,7 +212,7 @@ class CodecArchive {
 
 #define SERIALIZER_FOR_STL2(type)                                             \
   template <typename T1, typename T2>                                         \
-  CodecArchive& operator&(type<T1, T2>& v) {                                  \
+  ref_type operator&(type<T1, T2>& v) {                                  \
     uint32_t len;                                                             \
     *this& len;                                                               \
     for (uint32_t i = 0; i < len; ++i) {                                      \
@@ -219,7 +223,7 @@ class CodecArchive {
     return *this;                                                             \
   }                                                                           \
   template <typename T1, typename T2>                                         \
-  const CodecArchive& operator&(const type<T1, T2>& v) const {                \
+  cref_type operator&(const type<T1, T2>& v) const {                \
     uint32_t len = v.size();                                                  \
     *this& len;                                                               \
     for (typename type<T1, T2>::const_iterator it = v.begin(); it != v.end(); \
@@ -237,18 +241,18 @@ class CodecArchive {
   SERIALIZER_FOR_STL2(std::multimap);
 
   template <typename T1, typename T2>
-  CodecArchive& operator&(std::pair<T1, T2>& v) {
+  ref_type operator&(std::pair<T1, T2>& v) {
     *this& v.first& v.second;
     return *this;
   }
 
   template <typename T1, typename T2>
-  const CodecArchive& operator&(const std::pair<T1, T2>& v) const {
+  cref_type operator&(const std::pair<T1, T2>& v) const {
     *this& v.first& v.second;
     return *this;
   }
 
-  CodecArchive& operator&(std::string& v) {
+  ref_type operator&(std::string& v) {
     uint32_t len;
     *this& len;
     v.clear();
@@ -264,7 +268,7 @@ class CodecArchive {
     return *this;
   }
 
-  const CodecArchive& operator&(const std::string& v) const {
+  cref_type operator&(const std::string& v) const {
     uint32_t len = v.length();
     *this& len;
     stream_.write(v.c_str(), len);

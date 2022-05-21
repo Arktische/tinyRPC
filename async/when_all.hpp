@@ -18,14 +18,13 @@ class when_all_latch {
   when_all_latch(const when_all_latch&) = delete;
   when_all_latch(when_all_latch&& other) noexcept
       : count_(other.count_.load(std::memory_order::acquire)),
-        awaiting_co_(
-            std::exchange(other.awaiting_co_, nullptr)) {}
+        awaiting_co_(std::exchange(other.awaiting_co_, nullptr)) {}
 
   auto operator=(const when_all_latch&) -> when_all_latch& = delete;
   auto operator=(when_all_latch&& other) noexcept -> when_all_latch& {
     if (std::addressof(other) != this) {
       count_.store(other.count_.load(std::memory_order::acquire),
-                    std::memory_order::relaxed);
+                   std::memory_order::relaxed);
       awaiting_co_ = std::exchange(other.awaiting_co_, nullptr);
     }
 
@@ -260,8 +259,7 @@ class when_all_task_promise {
     return completion_notifier{};
   }
 
-  auto unhandled_exception() noexcept { except_ptr = std::current_exception();
-  }
+  auto unhandled_exception() noexcept { except_ptr = std::current_exception(); }
 
   auto yield_value(return_type&& value) noexcept {
     return_value_ = std::addressof(value);
@@ -356,8 +354,7 @@ class when_all_task {
 
   when_all_task(const when_all_task&) = delete;
   when_all_task(when_all_task&& other) noexcept
-      : coroutine_(std::exchange(other.coroutine_, coroutine_handle_type{})) {
-  }
+      : coroutine_(std::exchange(other.coroutine_, coroutine_handle_type{})) {}
 
   auto operator=(const when_all_task&) -> when_all_task& = delete;
   auto operator=(when_all_task&&) -> when_all_task& = delete;

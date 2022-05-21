@@ -45,10 +45,7 @@ class task_container {
     }
   }
 
-  enum class garbage_collect_t {
-    yes,
-    no
-  };
+  enum class garbage_collect_t { yes, no };
 
   auto start(async::task<void>&& user_task,
              garbage_collect_t cleanup = garbage_collect_t::yes) -> void {
