@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace async::concepts {
+namespace async {
 
 template <typename type>
 concept awaiter = requires(type t, std::coroutine_handle<> c) {

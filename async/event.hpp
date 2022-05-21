@@ -44,7 +44,7 @@ class event {
   auto set(resume_order_policy policy = resume_order_policy::lifo) noexcept
       -> void;
 
-  template <concepts::executor executor_type>
+  template <executor executor_type>
   auto set(executor_type& e,
            resume_order_policy policy = resume_order_policy::lifo) noexcept
       -> void {

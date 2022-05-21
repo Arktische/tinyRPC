@@ -6,11 +6,11 @@ typedef void* (*Constructor)();
 
 class ObjectFactory {
  public:
-  static void set(const std::string& name, Constructor constructor) {
+  static auto set(const std::string& name, Constructor constructor) {
     constructorMap()[name] = constructor;
   }
 
-  static void* create(const std::string& name) {
+  static auto create(const std::string& name) -> void* {
     Constructor constructor = nullptr;
 
     if (constructorMap().find(name) != constructorMap().end())
@@ -22,7 +22,7 @@ class ObjectFactory {
   }
 
  private:
-  inline static std::map<std::string, Constructor>& constructorMap() {
+  inline static auto constructorMap() -> std::map<std::string, Constructor>& {
     static std::map<std::string, Constructor> instance;
     return instance;
   }
@@ -34,6 +34,6 @@ class ObjectFactory {
     class_type##Helper() {                                               \
       ObjectFactory::set(#class_name, class_type##Helper::creatObjFunc); \
     }                                                                    \
-    static void* creatObjFunc() { return new (class_type); }             \
+    static auto creatObjFunc() -> void* { return new (class_type); }     \
   };                                                                     \
   class_type##Helper class_type##helper

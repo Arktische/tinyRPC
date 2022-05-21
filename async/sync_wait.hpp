@@ -179,8 +179,8 @@ class sync_wait_task {
   coroutine_type coroutine_;
 };
 
-template <concepts::awaitable awaitable_type,
-          typename return_type = typename concepts::awaitable_traits<
+template <awaitable awaitable_type,
+          typename return_type = typename awaitable_traits<
               awaitable_type>::awaiter_return_type>
 static auto make_sync_wait_task(awaitable_type&& a)
     -> sync_wait_task<return_type> {
@@ -194,7 +194,7 @@ static auto make_sync_wait_task(awaitable_type&& a)
 
 }  // namespace detail
 
-template <concepts::awaitable awaitable_type>
+template <awaitable awaitable_type>
 auto sync_wait(awaitable_type&& a) -> decltype(auto) {
   detail::sync_wait_event e{};
   auto task = detail::make_sync_wait_task(std::forward<awaitable_type>(a));

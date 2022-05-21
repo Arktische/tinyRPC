@@ -64,9 +64,9 @@ class when_all_ready_awaitable<std::tuple<>> {
   constexpr when_all_ready_awaitable() noexcept = default;
   explicit constexpr when_all_ready_awaitable(std::tuple<>) noexcept {}
 
-  constexpr auto await_ready() const noexcept -> bool { return true; }
+  static constexpr auto await_ready() noexcept -> bool { return true; }
   auto await_suspend(std::coroutine_handle<>) noexcept -> void {}
-  auto await_resume() const noexcept -> std::tuple<> { return {}; }
+  static auto await_resume() noexcept -> std::tuple<> { return {}; }
 };
 
 template <typename... task_types>
@@ -171,7 +171,8 @@ class when_all_ready_awaitable {
 
   auto operator co_await() & noexcept {
     struct awaiter {
-      awaiter(when_all_ready_awaitable& awaitable) : awaitable_(awaitable) {}
+      explicit awaiter(when_all_ready_awaitable& awaitable)
+          : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
         return awaitable_.is_ready();
@@ -195,7 +196,8 @@ class when_all_ready_awaitable {
 
   auto operator co_await() && noexcept {
     struct awaiter {
-      awaiter(when_all_ready_awaitable& awaitable) : awaitable_(awaitable) {}
+      explicit awaiter(when_all_ready_awaitable& awaitable)
+          : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
         return awaitable_.is_ready();
@@ -238,7 +240,7 @@ class when_all_task_promise {
   using coroutine_handle_type =
       std::coroutine_handle<when_all_task_promise<return_type>>;
 
-  when_all_task_promise() noexcept {}
+  when_all_task_promise() noexcept = default;
 
   auto get_return_object() noexcept {
     return coroutine_handle_type::from_promise(*this);
@@ -303,12 +305,12 @@ class when_all_task_promise<void> {
     return coroutine_handle_type::from_promise(*this);
   }
 
-  auto initial_suspend() noexcept -> std::suspend_always { return {}; }
+  static auto initial_suspend() noexcept -> std::suspend_always { return {}; }
 
-  auto final_suspend() noexcept {
+  static auto final_suspend() noexcept {
     struct completion_notifier {
-      auto await_ready() const noexcept -> bool { return false; }
-      auto await_suspend(coroutine_handle_type coroutine) const noexcept
+      static auto await_ready() noexcept -> bool { return false; }
+      static auto await_suspend(coroutine_handle_type coroutine) noexcept
           -> void {
         coroutine.promise().latch_->notify_awaitable_completed();
       }
@@ -349,7 +351,7 @@ class when_all_task {
   using promise_type = when_all_task_promise<return_type>;
   using coroutine_handle_type = typename promise_type::coroutine_handle_type;
 
-  when_all_task(coroutine_handle_type coroutine) noexcept
+  explicit when_all_task(coroutine_handle_type coroutine) noexcept
       : coroutine_(coroutine) {}
 
   when_all_task(const when_all_task&) = delete;
@@ -400,9 +402,8 @@ class when_all_task {
   coroutine_handle_type coroutine_;
 };
 
-template <concepts::awaitable awaitable,
-          typename return_type = typename concepts::awaitable_traits<
-              awaitable&&>::awaiter_return_type>
+template <awaitable awaitable, typename return_type = typename awaitable_traits<
+                                   awaitable&&>::awaiter_return_type>
 static auto make_when_all_task(awaitable a) -> when_all_task<return_type> {
   if constexpr (std::is_void_v<return_type>) {
     co_await static_cast<awaitable&&>(a);
@@ -414,19 +415,17 @@ static auto make_when_all_task(awaitable a) -> when_all_task<return_type> {
 
 }  // namespace detail
 
-template <concepts::awaitable... awaitables_type>
+template <awaitable... awaitables_type>
 [[nodiscard]] auto when_all(awaitables_type... awaitables) {
-  return detail::when_all_ready_awaitable<
-      std::tuple<detail::when_all_task<typename concepts::awaitable_traits<
-          awaitables_type>::awaiter_return_type>...>>(
+  return detail::when_all_ready_awaitable<std::tuple<detail::when_all_task<
+      typename awaitable_traits<awaitables_type>::awaiter_return_type>...>>(
       std::make_tuple(detail::make_when_all_task(std::move(awaitables))...));
 }
 
-template <
-    std::ranges::range range_type,
-    concepts::awaitable awaitable_type = std::ranges::range_value_t<range_type>,
-    typename return_type = typename concepts::awaitable_traits<
-        awaitable_type>::awaiter_return_type>
+template <std::ranges::range range_type,
+          awaitable awaitable_type = std::ranges::range_value_t<range_type>,
+          typename return_type =
+              typename awaitable_traits<awaitable_type>::awaiter_return_type>
 [[nodiscard]] auto when_all(range_type awaitables)
     -> detail::when_all_ready_awaitable<
         std::vector<detail::when_all_task<return_type>>> {

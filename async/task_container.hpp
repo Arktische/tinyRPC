@@ -13,7 +13,7 @@
 namespace async {
 class scheduler;
 
-template <concepts::executor executor_type>
+template <executor executor_type>
 class task_container {
  public:
   using task_position = std::list<std::size_t>::iterator;

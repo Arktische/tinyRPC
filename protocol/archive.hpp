@@ -22,12 +22,12 @@ namespace endian {
 class SwapByteBase {
  public:
   // endian test
-  static bool ShouldSwap() {
+  static auto ShouldSwap() -> bool {
     static const uint16_t swapTest = 1;
     return (*((char*)&swapTest) == 1);
   }
   // swap v1 v2
-  static void SwapBytes(uint8_t& v1, uint8_t& v2) {
+  static auto SwapBytes(uint8_t& v1, uint8_t& v2) -> void {
     uint8_t tmp = v1;
     v1 = v2;
     v2 = tmp;
@@ -37,7 +37,7 @@ class SwapByteBase {
 template <typename T, int S>
 class SwapByte : public SwapByteBase {
  public:
-  static T Swap(T v) {
+  static auto Swap(T v) -> T {
     // code should never run to here
     assert(false);
     return v;
@@ -47,13 +47,13 @@ class SwapByte : public SwapByteBase {
 template <typename T>
 class SwapByte<T, 1> : public SwapByteBase {
  public:
-  static T Swap(T v) { return v; }
+  static auto Swap(T v) -> T { return v; }
 };
 
 template <typename T>
 class SwapByte<T, 2> : public SwapByteBase {
  public:
-  static T Swap(T v) {
+  static auto Swap(T v) -> T {
     if (ShouldSwap()) return (v >> 8) | (v << 8);
     return v;
   }
@@ -62,7 +62,7 @@ class SwapByte<T, 2> : public SwapByteBase {
 template <typename T>
 class SwapByte<T, 4> : public SwapByteBase {
  public:
-  static T Swap(T v) {
+  static auto Swap(T v) -> T {
     if (ShouldSwap()) {
       return (SwapByte<uint16_t, 2>::Swap((uint32_t)v & 0xffff) << 16) |
              (SwapByte<uint16_t, 2>::Swap(((uint32_t)v & 0xffff0000) >> 16));
@@ -74,7 +74,7 @@ class SwapByte<T, 4> : public SwapByteBase {
 template <typename T>
 class SwapByte<T, 8> : public SwapByteBase {
  public:
-  static T Swap(T v) {
+  static auto Swap(T v) -> T {
     if (ShouldSwap())
       return (((uint64_t)SwapByte<uint32_t, 4>::Swap(
                   (uint32_t)(v & 0xffffffffull)))
@@ -87,7 +87,7 @@ class SwapByte<T, 8> : public SwapByteBase {
 template <>
 class SwapByte<float, 4> : public SwapByteBase {
  public:
-  static float Swap(float v) {
+  static auto Swap(float v) -> float {
     union {
       float f;
       uint8_t c[4];
@@ -104,7 +104,7 @@ class SwapByte<float, 4> : public SwapByteBase {
 template <>
 class SwapByte<double, 8> : public SwapByteBase {
  public:
-  static double Swap(double v) {
+  static auto Swap(double v) -> double {
     union {
       double f;
       uint8_t c[8];
@@ -132,20 +132,20 @@ class Binary {
 
  public:
   template <typename T>
-  cref_type operator<<(const T& v) const {
+  auto operator<<(const T& v) const -> cref_type {
     *this& v;
     return *this;
   }
 
   template <typename T>
-  ref_type operator>>(T& v) {
+  auto operator>>(T& v) -> ref_type {
     *this& v;
     return *this;
   }
 
  public:
   template <typename T, size_t N>
-  ref_type operator&(T (&v)[N]) {
+  auto operator&(T (&v)[N]) -> ref_type {
     uint32_t len;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -153,7 +153,7 @@ class Binary {
   }
 
   template <typename T, size_t N>
-  cref_type operator&(const T (&v)[N]) const {
+  auto operator&(const T (&v)[N]) const -> cref_type {
     uint32_t len = N;
     *this& len;
     for (size_t i = 0; i < N; ++i) *this& v[i];
@@ -161,7 +161,7 @@ class Binary {
   }
 
 #define SERIALIZER_FOR_POD(type)                  \
-  ref_type operator&(type& v) {              \
+  auto operator&(type& v)->ref_type {             \
     stream_.read((char*)&v, sizeof(type));        \
     if (!stream_) {                               \
       throw std::runtime_error("malformed data"); \
@@ -169,7 +169,7 @@ class Binary {
     v = Swap(v);                                  \
     return *this;                                 \
   }                                               \
-  cref_type operator&(type v) const {   \
+  auto operator&(type v) const->cref_type {       \
     v = Swap(v);                                  \
     stream_.write((const char*)&v, sizeof(type)); \
     return *this;                                 \
@@ -191,7 +191,7 @@ class Binary {
 
 #define SERIALIZER_FOR_STL(type)                                               \
   template <typename T>                                                        \
-  ref_type operator&(type<T>& v) {                                        \
+  auto operator&(type<T>& v)->ref_type {                                       \
     uint32_t len;                                                              \
     *this& len;                                                                \
     for (uint32_t i = 0; i < len; ++i) {                                       \
@@ -202,7 +202,7 @@ class Binary {
     return *this;                                                              \
   }                                                                            \
   template <typename T>                                                        \
-  cref_type operator&(const type<T>& v) const {                      \
+  auto operator&(const type<T>& v) const->cref_type {                          \
     uint32_t len = v.size();                                                   \
     *this& len;                                                                \
     for (typename type<T>::const_iterator it = v.begin(); it != v.end(); ++it) \
@@ -212,7 +212,7 @@ class Binary {
 
 #define SERIALIZER_FOR_STL2(type)                                             \
   template <typename T1, typename T2>                                         \
-  ref_type operator&(type<T1, T2>& v) {                                  \
+  auto operator&(type<T1, T2>& v)->ref_type {                                 \
     uint32_t len;                                                             \
     *this& len;                                                               \
     for (uint32_t i = 0; i < len; ++i) {                                      \
@@ -223,7 +223,7 @@ class Binary {
     return *this;                                                             \
   }                                                                           \
   template <typename T1, typename T2>                                         \
-  cref_type operator&(const type<T1, T2>& v) const {                \
+  auto operator&(const type<T1, T2>& v) const->cref_type {                    \
     uint32_t len = v.size();                                                  \
     *this& len;                                                               \
     for (typename type<T1, T2>::const_iterator it = v.begin(); it != v.end(); \
@@ -241,18 +241,18 @@ class Binary {
   SERIALIZER_FOR_STL2(std::multimap);
 
   template <typename T1, typename T2>
-  ref_type operator&(std::pair<T1, T2>& v) {
+  auto operator&(std::pair<T1, T2>& v) -> ref_type {
     *this& v.first& v.second;
     return *this;
   }
 
   template <typename T1, typename T2>
-  cref_type operator&(const std::pair<T1, T2>& v) const {
+  auto operator&(const std::pair<T1, T2>& v) const -> cref_type {
     *this& v.first& v.second;
     return *this;
   }
 
-  ref_type operator&(std::string& v) {
+  auto operator&(std::string& v) -> ref_type {
     uint32_t len;
     *this& len;
     v.clear();
@@ -268,7 +268,7 @@ class Binary {
     return *this;
   }
 
-  cref_type operator&(const std::string& v) const {
+  auto operator&(const std::string& v) const -> cref_type {
     uint32_t len = v.length();
     *this& len;
     stream_.write(v.c_str(), len);
@@ -277,7 +277,7 @@ class Binary {
 
  private:
   template <typename T>
-  T Swap(const T& v) const {
+  auto Swap(const T& v) const -> T {
     return endian::SwapByte<T, sizeof(T)>::Swap(v);
   }
 

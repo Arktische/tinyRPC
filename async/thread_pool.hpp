@@ -14,7 +14,7 @@
 
 #include "event.hpp"
 #include "task.hpp"
-namespace async::concepts {
+namespace async {
 
 template <class T, class V>
 concept range_of =
@@ -88,7 +88,7 @@ class thread_pool {
 
   auto resume(std::coroutine_handle<> handle) noexcept -> void;
 
-  template <async::concepts::range_of<std::coroutine_handle<>> range_type>
+  template <range_of<std::coroutine_handle<>> range_type>
   auto resume(const range_type& handles) noexcept -> void {
     size_.fetch_add(std::size(handles), std::memory_order::release);
 

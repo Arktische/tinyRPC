@@ -5,11 +5,11 @@
 
 #include "awaitable.hpp"
 
-namespace async::concepts {
+namespace async {
 template <typename type>
 concept executor = requires(type t, std::coroutine_handle<> c) {
-  { t.schedule() } -> async::concepts::awaiter;
-  { t.yield() } -> async::concepts::awaiter;
+  { t.schedule() } -> awaiter;
+  { t.yield() } -> awaiter;
   { t.resume(c) } -> std::same_as<void>;
 };
 
