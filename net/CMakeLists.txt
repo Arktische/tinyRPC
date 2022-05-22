@@ -19,3 +19,13 @@ add_library(
         tcp_conn_timer.cc
         coroutine_hook.cc
 )
+
+add_executable(
+        net_test
+        net_test.cc
+)
+target_link_libraries(net_test net gtest_main ${GTEST_LIBRARIES})
+include(GoogleTest)
+gtest_discover_tests(
+        net_test
+)

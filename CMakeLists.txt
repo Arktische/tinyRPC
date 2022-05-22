@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.12)
 project(tinyRPC VERSION 0.1 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+include_directories(
+        ${PROJECT_SOURCE_DIR}
+)
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -36,4 +39,5 @@ add_subdirectory(protocol)
 add_subdirectory(net)
 add_subdirectory(test)
 add_subdirectory(async)
-add_library(${PROJECT_NAME} tinyRPC.cc)
+add_subdirectory(net2)
+add_library(${PROJECT_NAME} tiny.cc)

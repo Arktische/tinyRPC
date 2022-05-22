@@ -114,10 +114,10 @@ class sync_wait_task_promise<void> : public sync_wait_task_promise_base {
     return coroutine_type::from_promise(*this);
   }
 
-  static auto final_suspend() noexcept {
+   auto final_suspend() noexcept {
     struct completion_notifier {
-      static auto await_ready() noexcept { return false; }
-      static auto await_suspend(coroutine_type coroutine) noexcept {
+       auto await_ready() noexcept { return false; }
+       auto await_suspend(coroutine_type coroutine) noexcept {
         coroutine.promise().event_->set();
       }
       auto await_resume() noexcept {};
@@ -182,7 +182,7 @@ class sync_wait_task {
 template <awaitable awaitable_type,
           typename return_type = typename awaitable_traits<
               awaitable_type>::awaiter_return_type>
-static auto make_sync_wait_task(awaitable_type&& a)
+auto make_sync_wait_task(awaitable_type&& a)
     -> sync_wait_task<return_type> {
   if constexpr (std::is_void_v<return_type>) {
     co_await std::forward<awaitable_type>(a);

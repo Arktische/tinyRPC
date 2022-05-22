@@ -14,7 +14,7 @@ namespace detail {
 struct promise_base {
   friend struct final_awaitable;
   struct final_awaitable {
-    static auto await_ready() noexcept -> bool { return false; }
+    auto await_ready() noexcept -> bool { return false; }
 
     template <typename promise_type>
     auto await_suspend(std::coroutine_handle<promise_type> coroutine) noexcept
@@ -33,9 +33,9 @@ struct promise_base {
   promise_base() noexcept = default;
   ~promise_base() = default;
 
-  static auto initial_suspend() { return std::suspend_always{}; }
+  auto initial_suspend() { return std::suspend_always{}; }
 
-  static auto final_suspend() noexcept(true) { return final_awaitable{}; }
+  auto final_suspend() noexcept(true) { return final_awaitable{}; }
 
   auto unhandled_exception() -> void { except_ptr_ = std::current_exception(); }
 
@@ -108,12 +108,9 @@ class [[nodiscard]] task {
  public:
   using task_type = task<return_type>;
   using promise_type = detail::promise<return_type>;
-  using coroutine_handle = std::coroutine_handle<promise_type>;
+  using co_handle_type = std::coroutine_handle<promise_type>;
 
   struct awaitable_base {
-    explicit awaitable_base(coroutine_handle coroutine) noexcept
-        : coroutine_(coroutine) {}
-
     [[nodiscard]] auto await_ready() const noexcept -> bool {
       return !coroutine_ || coroutine_.done();
     }
@@ -124,12 +121,12 @@ class [[nodiscard]] task {
       return coroutine_;
     }
 
-    std::coroutine_handle<promise_type> coroutine_{nullptr};
+    co_handle_type coroutine_{nullptr};
   };
 
   task() noexcept : coroutine_(nullptr) {}
 
-  explicit task(coroutine_handle handle) : coroutine_(handle) {}
+  explicit task(co_handle_type handle) : coroutine_(handle) {}
   task(const task&) = delete;
   task(task&& other) noexcept
       : coroutine_(std::exchange(other.coroutine_, nullptr)) {}
@@ -176,7 +173,7 @@ class [[nodiscard]] task {
   }
 
   auto operator co_await() const& noexcept {
-    struct awaitable : public awaitable_base {
+    struct awaitable_lref : public awaitable_base {
       auto await_resume() -> decltype(auto) {
         if constexpr (std::is_same_v<void, return_type>) {
           this->coroutine_.promise().result();
@@ -187,11 +184,11 @@ class [[nodiscard]] task {
       }
     };
 
-    return awaitable{coroutine_};
+    return awaitable_lref{coroutine_};
   }
 
   auto operator co_await() const&& noexcept {
-    struct awaitable : public awaitable_base {
+    struct awaitable_rref : public awaitable_base {
       auto await_resume() -> decltype(auto) {
         if constexpr (std::is_same_v<void, return_type>) {
           this->coroutine_.promise().result();
@@ -202,7 +199,7 @@ class [[nodiscard]] task {
       }
     };
 
-    return awaitable{coroutine_};
+    return awaitable_rref{coroutine_};
   }
 
   auto promise() & -> promise_type& { return coroutine_.promise(); }
@@ -214,10 +211,10 @@ class [[nodiscard]] task {
     return std::move(coroutine_.promise());
   }
 
-  auto handle() -> coroutine_handle { return coroutine_; }
+  auto handle() -> co_handle_type { return coroutine_; }
 
  private:
-  coroutine_handle coroutine_{nullptr};
+  co_handle_type coroutine_{nullptr};
 };
 
 namespace detail {

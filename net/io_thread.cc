@@ -66,8 +66,8 @@ bool IOThread::addClient(TcpServer* tcp_svr, int fd) {
     it->second = std::make_shared<TcpConnection>(tcp_svr, this, fd, 128,
                                                  tcp_svr->getPeerAddr());
     it->second->registerToTimeWheel();
-    it->second->OnRead(std::move(tcp_svr->rcb_));
-    it->second->OnWrite(std::move(tcp_svr->wcb_));
+//    it->second->OnRead(std::move(tcp_svr->rcb_));
+//    it->second->OnWrite(std::move(tcp_svr->wcb_));
 
   } else {
     TcpConnection::ptr conn = std::make_shared<TcpConnection>(
