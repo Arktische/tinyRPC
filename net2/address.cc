@@ -18,6 +18,6 @@ auto ipv4_address::saddr() ->struct sockaddr* {
   return addr_;
 }
 
-auto ipv4_address::len() const -> socklen_t  { return sizeof(sockaddr); }
+auto ipv4_address::len()  -> socklen_t const { return sizeof(sockaddr); }
 
 }
