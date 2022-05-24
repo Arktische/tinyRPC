@@ -9,7 +9,7 @@ namespace net2 {
 class address {
  public:
   virtual auto plen() -> socklen_t* = 0;
-  virtual auto len()  -> socklen_t const = 0;
+  virtual auto len() -> socklen_t const = 0;
   virtual auto saddr() -> struct sockaddr* = 0;
 };
 
@@ -20,7 +20,7 @@ class ipv4_address final : public address,
  public:
   ipv4_address(const std::string& ip, uint16_t port);
   ~ipv4_address();
-  auto len()  -> socklen_t const override;
+  auto len() -> socklen_t const override;
   auto plen() -> socklen_t* override;
   auto saddr() -> sockaddr* override;
 

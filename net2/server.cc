@@ -1,6 +1,7 @@
 #include "server.hpp"
 
 #include <common/log.hpp>
+#include "common/error.hpp"
 namespace net2 {
 server::server(int fd,addr_type addr) :fd_(fd),addr_(addr), accept_ring_(new io_uring){
   auto ring = accept_ring_.get();
@@ -28,6 +29,6 @@ auto server::on(addr_type addr) -> server::return_type {
     LOG(FATAL)<< strerror(errno);
   }
 
-  return std::make_tuple(server(fd,addr), make_error_code(errno));
+  return std::make_tuple(server(fd,addr), make_error_code(OSError(nil)));
 }
 }  // namespace net2

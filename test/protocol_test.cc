@@ -35,11 +35,10 @@ class B {
  public:
   int a{2};
   char b{'c'};
-  char* c{nullptr};
   std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
 };
 
-message(B, export(a), export(b), export(c), export(vec));
+message(B, export(a), export(b), export(vec));
 message(A, export(i0), export(i1), export(i2), export(i3), export(ar),
         export(vec));
 std::ostream& operator<<(std::ostream& out, std::vector<int>& a) {
@@ -50,23 +49,35 @@ std::ostream& operator<<(std::ostream& out, std::vector<int>& a) {
   }
   if (size > 0) out << a[size - 1];
   out << ']';
+  return out;
 }
 
 B GetB(A a) {
   std::cout << "GetB called\n";
+
+  std::cout <<"received request:{\n";
   for_each(a, [](auto&& feildName, auto&& value) {
-    std::cout << feildName << ":" << value << ",\n";
+    std::cout << '\t'<<feildName << ":" << value << ",\n";
   });
-  return B{};
+  std::cout<<"}\n";
+  return B{3,'d',{7,8,9,10,10,11}};
 }
 
 rpc(A, B, GetB, codec::Binary<std::stringstream>);
 
 TEST(protocol_test, dispatch_test) {
   A a;
+  B b;
   auto ptr = dispatch("GetB", codec::Binary<std::stringstream>);
   std::stringstream ss;
   codec::Binary<std::stringstream> cdc(ss);
   for_each(a, [&cdc](auto&&, auto&& value) { cdc << value; });
   ptr->call(cdc);
+
+  std::cout <<"received response:{\n";
+  for_each(b, [&cdc](auto&& field, auto&& value){
+    cdc >> value;
+    std::cout << '\t'<<field << ":" << value << ",\n";
+  });
+  std::cout<<"}\n";
 }

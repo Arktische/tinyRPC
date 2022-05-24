@@ -2,12 +2,12 @@
 #include "schema.hpp"
 template <typename codec_type>
 struct RemoteProcedureBase {
-  virtual auto call(codec_type) -> codec_type = 0;
+  virtual auto call(codec_type&) -> codec_type& = 0;
 };
 
 #define rpc(request, response, handler, codec)                              \
   struct __remote__##handler : RemoteProcedureBase<codec> {                 \
-    auto call(codec codec_) -> codec {                                      \
+    auto call(codec& codec_) -> codec& {                                    \
       request req;                                                          \
       for_each(req, [&codec_](auto&&, auto&& value) { codec_ >> value; });  \
       response resp = handler(req);                                         \

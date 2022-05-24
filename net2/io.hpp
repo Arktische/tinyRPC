@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <system_error>
 
 #include <async/task.hpp>
@@ -15,6 +16,7 @@
 #include "async_sqe.hpp"
 
 namespace net2 {
+using io_handle_type = std::shared_ptr<io_uring>;
 class io_context {
  public:
   explicit io_context(int entries = 64, uint32_t flags = 0, uint32_t wq_fd = 0);

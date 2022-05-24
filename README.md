@@ -1,6 +1,6 @@
-# net
+# tinyRPC
 
-Pivot Talent Plan networking lab(**STILL ON DEVELOPING**).
+tinyRPC networking lab(**STILL ON DEVELOPING**).
 
 ## Introduction
 
@@ -13,11 +13,13 @@ interview especially for campus recruiting.
 ## Pre-request
 
 Be sure to use the following environment：
-* Linux release: Ubuntu 20.04 LTS
 * cmake version >= 3.22
-* gcc/g++ version >= 8.0 or clang/clang++ version >= 10.0
+* gcc/g++ version >= 11.0 or clang/clang++ version >= 11.0
 * OS arch: amd64 aka x86_64
 * CPU: Intel CPU with AVX support (commonly after skylake)
+
+> Ubuntu 22.04 satisfy those requirements by default package manager `apt`
+
 > If you use other platforms, the project is **NOT** guaranteed to compile and run correctly.
 ## Architecture
 
@@ -29,7 +31,7 @@ The whole project is divided into few steps, in each piece you will write your c
     * basic practice of linux networking programming with epoll.
 * [net](net/net.md)
     * networking library with epoll support
-* [core](core/core.md)
+* [net2](net2/net2.md)
     * yet another networking library with io_uring support.
 
 ## Open Source License Declaration
