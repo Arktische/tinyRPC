@@ -15,7 +15,7 @@ class bucket {
   // Tests if the pointer belongs to this bucket
   auto belongs(void* ptr) const noexcept -> bool;
   // Returns nullptr if failed
-  [[nodiscard]] void* allocate(std::size_t bytes) noexcept;
+  void* allocate(std::size_t bytes) noexcept;
   void deallocate(void* ptr, std::size_t bytes) noexcept;
 
  private:

@@ -416,7 +416,7 @@ static auto make_when_all_task(awaitable a) -> when_all_task<return_type> {
 }  // namespace detail
 
 template <awaitable... awaitables_type>
-[[nodiscard]] auto when_all(awaitables_type... awaitables) {
+  auto when_all(awaitables_type... awaitables) {
   return detail::when_all_ready_awaitable<std::tuple<detail::when_all_task<
       typename awaitable_traits<awaitables_type>::awaiter_return_type>...>>(
       std::make_tuple(detail::make_when_all_task(std::move(awaitables))...));
@@ -426,7 +426,7 @@ template <std::ranges::range range_type,
           awaitable awaitable_type = std::ranges::range_value_t<range_type>,
           typename return_type =
               typename awaitable_traits<awaitable_type>::awaiter_return_type>
-[[nodiscard]] auto when_all(range_type awaitables)
+  auto when_all(range_type awaitables)
     -> detail::when_all_ready_awaitable<
         std::vector<detail::when_all_task<return_type>>> {
   std::vector<detail::when_all_task<return_type>> output_tasks;

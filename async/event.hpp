@@ -13,7 +13,7 @@ class event {
   struct awaiter {
     explicit awaiter(const event& e) noexcept : event_(e) {}
 
-    [[nodiscard]] auto await_ready() const noexcept -> bool {
+      auto await_ready() const noexcept -> bool {
       return event_.is_set();
     }
 

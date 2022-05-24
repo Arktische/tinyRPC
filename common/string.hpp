@@ -141,12 +141,12 @@ struct DiyFp {
     return {ac + (ad >> 32) + (bc >> 32) + (tmp >> 32), e + rhs.e + 64};
   }
 
-  [[nodiscard]] DiyFp Normalize() const {
+  DiyFp Normalize() const {
     int s = __builtin_clzll(f);
     return {f << s, e - s};
   }
 
-  [[nodiscard]] DiyFp NormalizeBoundary() const {
+  DiyFp NormalizeBoundary() const {
     DiyFp res = *this;
     while (!(res.f & (kDpHiddenBit << 1))) {
       res.f <<= 1;

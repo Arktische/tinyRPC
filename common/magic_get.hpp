@@ -95,7 +95,7 @@ template <size_t I, class T>
 using tuple_element =
     std::remove_reference<decltype(sequence_tuple::get<I>(std::declval<T>()))>;
 
-}  // namespace sequence_tuple
+}  // namespace common::schema::sequence_tuple
 
 namespace common::schema::detail {
 
@@ -316,7 +316,7 @@ constexpr auto as_tuple() noexcept {
 
   return res;
 }
-}  // namespace detail
+}  // namespace common::schema::detail
 
 namespace common::schema {
 template <std::size_t I, class T>
@@ -332,4 +332,4 @@ template <class T>
 constexpr std::size_t tuple_size() noexcept {
   return decltype(detail::as_tuple<T>())::size_v;
 }
-}  // namespace common
+}  // namespace common::schema

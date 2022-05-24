@@ -70,10 +70,10 @@ class thread_pool {
 
   auto thread_count() const noexcept -> uint32_t { return thread_.size(); }
 
-  [[nodiscard]] auto schedule() -> operation;
+    auto schedule() -> operation;
 
   template <typename functor, typename... arguments>
-  [[nodiscard]] auto schedule(functor&& f, arguments... args)
+    auto schedule(functor&& f, arguments... args)
       -> task<decltype(f(std::forward<arguments>(args)...))> {
     co_await schedule();
 
@@ -112,7 +112,7 @@ class thread_pool {
     wait_cond_.notify_one();
   }
 
-  [[nodiscard]] auto yield() -> operation { return schedule(); }
+    auto yield() -> operation { return schedule(); }
 
   auto shutdown() noexcept -> void;
 

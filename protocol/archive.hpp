@@ -175,18 +175,18 @@ class Binary {
     return *this;                                 \
   }
 
-  auto operator&(char& v)->ref_type {             
-    stream_.read((char*)&v, sizeof(char));        
-    if (!stream_) {                               
-      throw std::runtime_error("malformed data"); 
-    }                                             
-    v = Swap(v);                                  
-    return *this;                                 
-  }                                               
-  auto operator&(char v) const->cref_type {       
-    v = Swap(v);                                  
-    stream_.write((const char*)&v, sizeof(char)); 
-    return *this;                                 
+  auto operator&(char& v) -> ref_type {
+    stream_.read((char*)&v, sizeof(char));
+    if (!stream_) {
+      throw std::runtime_error("malformed data");
+    }
+    v = Swap(v);
+    return *this;
+  }
+  auto operator&(char v) const -> cref_type {
+    v = Swap(v);
+    stream_.write((const char*)&v, sizeof(char));
+    return *this;
   }
 
   SERIALIZER_FOR_POD(bool);

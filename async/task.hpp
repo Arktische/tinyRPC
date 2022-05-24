@@ -104,14 +104,14 @@ struct promise<void> : public promise_base {
 }  // namespace detail
 
 template <typename return_type>
-class [[nodiscard]] task {
+class task {
  public:
   using task_type = task<return_type>;
   using promise_type = detail::promise<return_type>;
   using co_handle_type = std::coroutine_handle<promise_type>;
 
   struct awaitable_base {
-    [[nodiscard]] auto await_ready() const noexcept -> bool {
+    auto await_ready() const noexcept -> bool {
       return !coroutine_ || coroutine_.done();
     }
 
@@ -151,7 +151,7 @@ class [[nodiscard]] task {
     return *this;
   }
 
-  [[nodiscard]] auto is_ready() const noexcept -> bool {
+  auto is_ready() const noexcept -> bool {
     return coroutine_ == nullptr || coroutine_.done();
   }
 
@@ -204,9 +204,7 @@ class [[nodiscard]] task {
 
   auto promise() & -> promise_type& { return coroutine_.promise(); }
 
-  [[nodiscard]] auto promise() const& -> const promise_type& {
-    return coroutine_.promise();
-  }
+  auto promise() const& -> const promise_type& { return coroutine_.promise(); }
   auto promise() && -> promise_type&& {
     return std::move(coroutine_.promise());
   }

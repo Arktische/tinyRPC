@@ -5,6 +5,7 @@
 #include <cassert>
 #include <climits>
 #include <coroutine>
+#include <functional>
 #include <optional>
 #include <type_traits>
 
@@ -66,18 +67,14 @@ struct sqe_awaitable {
 
       explicit await_sqe(io_uring_sqe* sqe) : sqe(sqe) {}
 
-      [[nodiscard]] static constexpr bool await_ready() noexcept {
-        return false;
-      }
+      static constexpr bool await_ready() noexcept { return false; }
 
       void await_suspend(std::coroutine_handle<> handle) noexcept {
         resolver.handle = handle;
         io_uring_sqe_set_data(sqe, &resolver);
       }
 
-      [[nodiscard]] constexpr int await_resume() const noexcept {
-        return resolver.result;
-      }
+      constexpr int await_resume() const noexcept { return resolver.result; }
     };
 
     return await_sqe(sqe);
