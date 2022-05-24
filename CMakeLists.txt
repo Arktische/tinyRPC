@@ -31,7 +31,6 @@ else ()
 endif ()
 
 FetchContent_MakeAvailable(googletest benchmark)
-enable_testing()
 add_subdirectory(common)
 add_subdirectory(lab0)
 add_subdirectory(lab1)
