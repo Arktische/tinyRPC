@@ -22,9 +22,9 @@ concept range_of =
 
 template <class T, class V>
 concept sized_range_of = std::ranges::sized_range<T> &&
-    std::is_same_v<V, std::ranges::range_value_t<T>>;
+                         std::is_same_v<V, std::ranges::range_value_t<T>>;
 
-}  // namespace async::concepts
+}  // namespace async
 namespace async {
 
 class thread_pool {
@@ -32,7 +32,7 @@ class thread_pool {
   class operation {
     friend class thread_pool;
 
-      operation(thread_pool& tp) noexcept;
+    operation(thread_pool& tp) noexcept;
 
    public:
     auto await_ready() noexcept -> bool { return false; }
@@ -56,10 +56,10 @@ class thread_pool {
     std::function<void(std::size_t)> on_thread_stop_functor = nullptr;
   };
 
-    thread_pool(options opts = options{
-                           .thread_count = std::thread::hardware_concurrency(),
-                           .on_thread_start_functor = nullptr,
-                           .on_thread_stop_functor = nullptr});
+  thread_pool(options opts = options{
+                  .thread_count = std::thread::hardware_concurrency(),
+                  .on_thread_start_functor = nullptr,
+                  .on_thread_stop_functor = nullptr});
 
   thread_pool(const thread_pool&) = delete;
   thread_pool(thread_pool&&) = delete;
@@ -70,10 +70,10 @@ class thread_pool {
 
   auto thread_count() const noexcept -> uint32_t { return thread_.size(); }
 
-    auto schedule() -> operation;
+  auto schedule() -> operation;
 
   template <typename functor, typename... arguments>
-    auto schedule(functor&& f, arguments... args)
+  auto schedule(functor&& f, arguments... args)
       -> task<decltype(f(std::forward<arguments>(args)...))> {
     co_await schedule();
 
@@ -112,7 +112,7 @@ class thread_pool {
     wait_cond_.notify_one();
   }
 
-    auto yield() -> operation { return schedule(); }
+  auto yield() -> operation { return schedule(); }
 
   auto shutdown() noexcept -> void;
 

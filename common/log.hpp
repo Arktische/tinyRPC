@@ -105,7 +105,7 @@ static thread_local std::aligned_storage<SIZE> gObjCache;
 template <size_t SIZE>
 class LogStreamBuffer : NonCopyable {
  public:
-    LogStreamBuffer(char* buf) : data_(buf), cur_(buf) {}
+  LogStreamBuffer(char* buf) : data_(buf), cur_(buf) {}
   char* data() { return data_; }
   inline int size() { return cur_ - data_; }
   inline int avail() { return static_cast<int>(data_ + SIZE - cur_); }

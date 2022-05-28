@@ -8,9 +8,9 @@
 namespace async {
 template <typename type>
 concept executor = requires(type t, std::coroutine_handle<> c) {
-  { t.schedule() } -> awaiter;
-  { t.yield() } -> awaiter;
-  { t.resume(c) } -> std::same_as<void>;
-};
+                     { t.schedule() } -> awaiter;
+                     { t.yield() } -> awaiter;
+                     { t.resume(c) } -> std::same_as<void>;
+                   };
 
-}  // namespace async::concepts
+}  // namespace async

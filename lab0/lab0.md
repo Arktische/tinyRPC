@@ -55,6 +55,7 @@ cmake ..
 make && make install
 ```
 
-> 🌟If you have trouble accessing github, just replace the domain with `hub.fastgit.org`. It's commonplace in mainland China, so take it easy and enjoy～
+> 🌟If you have trouble accessing github, just replace the domain with `hub.fastgit.org`. It's commonplace in mainland
+> China, so take it easy and enjoy～
 
 **NOTE**:You might need `sudo` to execute those commands.

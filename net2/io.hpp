@@ -19,7 +19,7 @@ namespace net2 {
 using io_handle_type = std::shared_ptr<io_uring>;
 class io_context {
  public:
-    io_context(int entries = 64, uint32_t flags = 0, uint32_t wq_fd = 0);
+  io_context(int entries = 64, uint32_t flags = 0, uint32_t wq_fd = 0);
 
   ~io_context() noexcept;
 

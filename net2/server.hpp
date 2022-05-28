@@ -20,7 +20,7 @@ class server {
   auto accept() -> async::generator<tcp_stream>;
 
  private:
-    server(int fd, addr_type addr);
+  server(int fd, addr_type addr);
   int fd_;
   addr_type addr_;
   io_handle_type accept_ring_;

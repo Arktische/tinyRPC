@@ -19,7 +19,7 @@ class EchoServer : NonCopyable {
  public:
   static const int kMaxConn = 1024;
   EchoServer(std::string_view host, uint16_t port);
-    EchoServer(int listen_fd) : fd_(listen_fd) {}
+  EchoServer(int listen_fd) : fd_(listen_fd) {}
   int start();
 
  private:

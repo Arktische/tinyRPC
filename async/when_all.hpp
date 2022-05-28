@@ -13,7 +13,7 @@ namespace detail {
 struct void_value {};
 class when_all_latch {
  public:
-    when_all_latch(std::size_t count) noexcept : count_(count + 1) {}
+  when_all_latch(std::size_t count) noexcept : count_(count + 1) {}
 
   when_all_latch(const when_all_latch&) = delete;
   when_all_latch(when_all_latch&& other) noexcept
@@ -62,7 +62,7 @@ template <>
 class when_all_ready_awaitable<std::tuple<>> {
  public:
   constexpr when_all_ready_awaitable() noexcept = default;
-    constexpr when_all_ready_awaitable(std::tuple<>) noexcept {}
+  constexpr when_all_ready_awaitable(std::tuple<>) noexcept {}
 
   static constexpr auto await_ready() noexcept -> bool { return true; }
   auto await_suspend(std::coroutine_handle<>) noexcept -> void {}
@@ -72,11 +72,11 @@ class when_all_ready_awaitable<std::tuple<>> {
 template <typename... task_types>
 class when_all_ready_awaitable<std::tuple<task_types...>> {
  public:
-    when_all_ready_awaitable(task_types&&... tasks) noexcept(
+  when_all_ready_awaitable(task_types&&... tasks) noexcept(
       std::conjunction_v<std::is_nothrow_move_constructible<task_types>...>)
       : latch_(sizeof...(task_types)), task_(std::move(tasks)...) {}
 
-    when_all_ready_awaitable(std::tuple<task_types...>&& tasks) noexcept(
+  when_all_ready_awaitable(std::tuple<task_types...>&& tasks) noexcept(
       std::is_nothrow_move_constructible_v<std::tuple<task_types...>>)
       : latch_(sizeof...(task_types)), task_(std::move(tasks)) {}
 
@@ -91,7 +91,7 @@ class when_all_ready_awaitable<std::tuple<task_types...>> {
 
   auto operator co_await() & noexcept {
     struct awaiter {
-        awaiter(when_all_ready_awaitable& awaitable) noexcept
+      awaiter(when_all_ready_awaitable& awaitable) noexcept
           : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
@@ -116,7 +116,7 @@ class when_all_ready_awaitable<std::tuple<task_types...>> {
 
   auto operator co_await() && noexcept {
     struct awaiter {
-        awaiter(when_all_ready_awaitable& awaitable) noexcept
+      awaiter(when_all_ready_awaitable& awaitable) noexcept
           : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
@@ -155,7 +155,7 @@ class when_all_ready_awaitable<std::tuple<task_types...>> {
 template <typename task_container_type>
 class when_all_ready_awaitable {
  public:
-    when_all_ready_awaitable(task_container_type&& tasks) noexcept
+  when_all_ready_awaitable(task_container_type&& tasks) noexcept
       : latch_(std::size(tasks)),
         task_(std::forward<task_container_type>(tasks)) {}
 
@@ -171,8 +171,7 @@ class when_all_ready_awaitable {
 
   auto operator co_await() & noexcept {
     struct awaiter {
-        awaiter(when_all_ready_awaitable& awaitable)
-          : awaitable_(awaitable) {}
+      awaiter(when_all_ready_awaitable& awaitable) : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
         return awaitable_.is_ready();
@@ -196,8 +195,7 @@ class when_all_ready_awaitable {
 
   auto operator co_await() && noexcept {
     struct awaiter {
-        awaiter(when_all_ready_awaitable& awaitable)
-          : awaitable_(awaitable) {}
+      awaiter(when_all_ready_awaitable& awaitable) : awaitable_(awaitable) {}
 
       auto await_ready() const noexcept -> bool {
         return awaitable_.is_ready();
@@ -351,7 +349,7 @@ class when_all_task {
   using promise_type = when_all_task_promise<return_type>;
   using coroutine_handle_type = typename promise_type::coroutine_handle_type;
 
-    when_all_task(coroutine_handle_type coroutine) noexcept
+  when_all_task(coroutine_handle_type coroutine) noexcept
       : coroutine_(coroutine) {}
 
   when_all_task(const when_all_task&) = delete;
@@ -416,7 +414,7 @@ static auto make_when_all_task(awaitable a) -> when_all_task<return_type> {
 }  // namespace detail
 
 template <awaitable... awaitables_type>
-  auto when_all(awaitables_type... awaitables) {
+auto when_all(awaitables_type... awaitables) {
   return detail::when_all_ready_awaitable<std::tuple<detail::when_all_task<
       typename awaitable_traits<awaitables_type>::awaiter_return_type>...>>(
       std::make_tuple(detail::make_when_all_task(std::move(awaitables))...));
@@ -426,9 +424,8 @@ template <std::ranges::range range_type,
           awaitable awaitable_type = std::ranges::range_value_t<range_type>,
           typename return_type =
               typename awaitable_traits<awaitable_type>::awaiter_return_type>
-  auto when_all(range_type awaitables)
-    -> detail::when_all_ready_awaitable<
-        std::vector<detail::when_all_task<return_type>>> {
+auto when_all(range_type awaitables) -> detail::when_all_ready_awaitable<
+    std::vector<detail::when_all_task<return_type>>> {
   std::vector<detail::when_all_task<return_type>> output_tasks;
 
   if constexpr (std::ranges::sized_range<range_type>) {

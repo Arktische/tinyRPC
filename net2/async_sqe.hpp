@@ -35,8 +35,7 @@ struct deferred_resolver final : resolver {
 };
 
 struct callback_resolver final : resolver {
-    callback_resolver(std::function<void(int result)>&& cb)
-      : cb(std::move(cb)) {}
+  callback_resolver(std::function<void(int result)>&& cb) : cb(std::move(cb)) {}
 
   void resolve(int result) noexcept override {
     this->cb(result);
@@ -49,7 +48,7 @@ struct callback_resolver final : resolver {
 
 struct sqe_awaitable {
   // TODO: use cancel_token to implement cancellation
-    sqe_awaitable(io_uring_sqe* sqe) noexcept : sqe(sqe) {}
+  sqe_awaitable(io_uring_sqe* sqe) noexcept : sqe(sqe) {}
 
   // User MUST keep resolver alive before the operation is finished
   void set_deferred(deferred_resolver& resolver) {
@@ -65,7 +64,7 @@ struct sqe_awaitable {
       resume_resolver resolver{};
       io_uring_sqe* sqe;
 
-        await_sqe(io_uring_sqe* sqe) : sqe(sqe) {}
+      await_sqe(io_uring_sqe* sqe) : sqe(sqe) {}
 
       static constexpr bool await_ready() noexcept { return false; }
 

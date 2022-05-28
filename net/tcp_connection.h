@@ -78,13 +78,11 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
   void output();
   void OnWrite(std::function<void(ptr)> f) { wcb_ = std::move(f); }
   std::size_t read(char* dst, std::size_t len) {
-
-    read_buffer_->readFromBuffer(,len);
-      }
-
-  std::size_t write(char* buf,std::size_t len) {
-
+    read_buffer_->readFromBuffer(, len);
   }
+
+  std::size_t write(char* buf, std::size_t len) {}
+
  private:
   void clearClient();
 

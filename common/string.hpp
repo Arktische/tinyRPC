@@ -103,7 +103,7 @@ struct DiyFp {
 
   DiyFp(uint64_t f, int e) : f(f), e(e) {}
 
-    DiyFp(double d) {
+  DiyFp(double d) {
     union {
       double d;
       uint64_t u64;

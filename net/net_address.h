@@ -27,7 +27,7 @@ class NetAddress {
 
 class IPAddress : public NetAddress {
  public:
-  IPAddress(std::string  ip, uint16_t port);
+  IPAddress(std::string ip, uint16_t port);
 
   IPAddress(uint16_t port);
 
@@ -53,9 +53,9 @@ class IPAddress : public NetAddress {
 
 class UnixDomainAddress : public NetAddress {
  public:
-    UnixDomainAddress(std::string path);
+  UnixDomainAddress(std::string path);
 
-    UnixDomainAddress(sockaddr_un addr);
+  UnixDomainAddress(sockaddr_un addr);
 
   sockaddr* getSockAddr() override;
 

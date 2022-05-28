@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
+
 #include <ostream>
 #include <sstream>
 #include <tuple>
 #include <vector>
+
 #include <protocol/archive.hpp>
 #include <protocol/rpc.hpp>
 #include <protocol/schema.hpp>
@@ -13,7 +15,7 @@ struct A {
   unsigned int i1{1};
   unsigned short i2{2};
   unsigned long long i3{3};
-  unsigned char ar[3]{'a', 'r','\0'};
+  unsigned char ar[3]{'a', 'r', '\0'};
   std::vector<int> vec{1, 2, 3, 4, 5, 5, 6};
 };
 
@@ -55,12 +57,12 @@ std::ostream& operator<<(std::ostream& out, std::vector<int>& a) {
 B GetB(A a) {
   std::cout << "GetB called\n";
 
-  std::cout <<"received request:{\n";
+  std::cout << "received request:{\n";
   for_each(a, [](auto&& feildName, auto&& value) {
-    std::cout << '\t'<<feildName << ":" << value << ",\n";
+    std::cout << '\t' << feildName << ":" << value << ",\n";
   });
-  std::cout<<"}\n";
-  return B{3,'d',{7,8,9,10,10,11}};
+  std::cout << "}\n";
+  return B{3, 'd', {7, 8, 9, 10, 10, 11}};
 }
 
 rpc(A, B, GetB, codec::Binary<std::stringstream>);
@@ -74,10 +76,10 @@ TEST(protocol_test, dispatch_test) {
   for_each(a, [&cdc](auto&&, auto&& value) { cdc << value; });
   ptr->call(cdc);
 
-  std::cout <<"received response:{\n";
-  for_each(b, [&cdc](auto&& field, auto&& value){
+  std::cout << "received response:{\n";
+  for_each(b, [&cdc](auto&& field, auto&& value) {
     cdc >> value;
-    std::cout << '\t'<<field << ":" << value << ",\n";
+    std::cout << '\t' << field << ":" << value << ",\n";
   });
-  std::cout<<"}\n";
+  std::cout << "}\n";
 }

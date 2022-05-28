@@ -21,13 +21,13 @@ class TimerEvent {
  public:
   typedef std::shared_ptr<TimerEvent> ptr;
   TimerEvent(int64_t interval, bool is_repeated, std::function<void()> task)
-      : m_interval(interval), m_is_repeated(is_repeated), m_task(std::move(task)) {
+      : m_interval(interval),
+        m_is_repeated(is_repeated),
+        m_task(std::move(task)) {
     m_arrive_time = getNowMs() + m_interval;
   }
 
-  void resetTime() {
-    m_arrive_time = getNowMs() + m_interval;
-  }
+  void resetTime() { m_arrive_time = getNowMs() + m_interval; }
 
  public:
   int64_t m_arrive_time;  // when to excute task, ms
@@ -43,7 +43,7 @@ class Timer : public FdEvent {
  public:
   typedef std::shared_ptr<Timer> ptr;
 
-    Timer(Reactor* reactor);
+  Timer(Reactor* reactor);
 
   ~Timer() override;
 
