@@ -128,7 +128,7 @@ class Binary {
   using cref_type = const type&;
 
  public:
-  explicit Binary(streamT& stream) : stream_(stream) {}
+    Binary(streamT& stream) : stream_(stream) {}
 
  public:
   template <typename T>

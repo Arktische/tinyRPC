@@ -43,7 +43,7 @@ class Timer : public FdEvent {
  public:
   typedef std::shared_ptr<Timer> ptr;
 
-  explicit Timer(Reactor* reactor);
+    Timer(Reactor* reactor);
 
   ~Timer() override;
 

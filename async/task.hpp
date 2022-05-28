@@ -126,7 +126,7 @@ class task {
 
   task() noexcept : coroutine_(nullptr) {}
 
-  explicit task(co_handle_type handle) : coroutine_(handle) {}
+    task(co_handle_type handle) : coroutine_(handle) {}
   task(const task&) = delete;
   task(task&& other) noexcept
       : coroutine_(std::exchange(other.coroutine_, nullptr)) {}

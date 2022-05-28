@@ -11,7 +11,7 @@ enum class resume_order_policy { lifo, fifo };
 class event {
  public:
   struct awaiter {
-    explicit awaiter(const event& e) noexcept : event_(e) {}
+      awaiter(const event& e) noexcept : event_(e) {}
 
       auto await_ready() const noexcept -> bool {
       return event_.is_set();
@@ -29,7 +29,7 @@ class event {
     awaiter* next_{nullptr};
   };
 
-  explicit event(bool initially_set = false) noexcept;
+    event(bool initially_set = false) noexcept;
   ~event() = default;
 
   event(const event&) = delete;

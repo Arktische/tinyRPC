@@ -32,7 +32,7 @@ class thread_pool {
   class operation {
     friend class thread_pool;
 
-    explicit operation(thread_pool& tp) noexcept;
+      operation(thread_pool& tp) noexcept;
 
    public:
     auto await_ready() noexcept -> bool { return false; }
@@ -56,7 +56,7 @@ class thread_pool {
     std::function<void(std::size_t)> on_thread_stop_functor = nullptr;
   };
 
-  explicit thread_pool(options opts = options{
+    thread_pool(options opts = options{
                            .thread_count = std::thread::hardware_concurrency(),
                            .on_thread_start_functor = nullptr,
                            .on_thread_stop_functor = nullptr});

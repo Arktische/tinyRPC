@@ -16,7 +16,7 @@ class TcpClient {
  public:
   typedef std::shared_ptr<TcpClient> ptr;
 
-  explicit TcpClient(NetAddress::ptr addr);
+    TcpClient(NetAddress::ptr addr);
 
   ~TcpClient();
 

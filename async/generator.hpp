@@ -72,7 +72,7 @@ class generator_iterator {
 
   generator_iterator() noexcept = default;
 
-  explicit generator_iterator(coroutine_handle coroutine) noexcept
+    generator_iterator(coroutine_handle coroutine) noexcept
       : m_coroutine(coroutine) {}
 
   friend auto operator==(const generator_iterator& it,
@@ -160,7 +160,7 @@ class generator {
  private:
   friend class detail::generator_promise<T>;
 
-  explicit generator(std::coroutine_handle<promise_type> coroutine) noexcept
+    generator(std::coroutine_handle<promise_type> coroutine) noexcept
       : coroutine_(coroutine) {}
 
   std::coroutine_handle<promise_type> coroutine_;

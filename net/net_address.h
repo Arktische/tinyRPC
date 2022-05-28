@@ -53,9 +53,9 @@ class IPAddress : public NetAddress {
 
 class UnixDomainAddress : public NetAddress {
  public:
-  explicit UnixDomainAddress(std::string path);
+    UnixDomainAddress(std::string path);
 
-  explicit UnixDomainAddress(sockaddr_un addr);
+    UnixDomainAddress(sockaddr_un addr);
 
   sockaddr* getSockAddr() override;
 

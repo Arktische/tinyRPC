@@ -10,7 +10,7 @@ namespace async {
 namespace detail {
 class sync_wait_event {
  public:
-  explicit sync_wait_event(bool initially_set = false) : set_(initially_set) {}
+    sync_wait_event(bool initially_set = false) : set_(initially_set) {}
   sync_wait_event(const sync_wait_event&) = delete;
   sync_wait_event(sync_wait_event&&) = delete;
   auto operator=(const sync_wait_event&) -> sync_wait_event& = delete;
@@ -141,7 +141,7 @@ class sync_wait_task {
   using promise_type = sync_wait_task_promise<return_type>;
   using coroutine_type = std::coroutine_handle<promise_type>;
 
-  explicit sync_wait_task(coroutine_type coroutine) noexcept
+    sync_wait_task(coroutine_type coroutine) noexcept
       : coroutine_(coroutine) {}
 
   sync_wait_task(const sync_wait_task&) = delete;

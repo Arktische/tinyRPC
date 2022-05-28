@@ -24,7 +24,7 @@ class Reactor {
  public:
   typedef std::shared_ptr<Reactor> ptr;
 
-  explicit Reactor();
+    Reactor();
 
   ~Reactor();
 

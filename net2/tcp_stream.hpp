@@ -11,7 +11,7 @@ namespace net2 {
 
 class tcp_stream {
  public:
-  explicit tcp_stream(int fd);
+    tcp_stream(int fd);
   tcp_stream(int fd, io_handle_type r_handle, io_handle_type w_handle);
   ~tcp_stream();
 

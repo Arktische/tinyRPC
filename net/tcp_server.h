@@ -18,7 +18,7 @@ namespace net {
 class TcpAcceptor {
  public:
   typedef std::shared_ptr<TcpAcceptor> ptr;
-  explicit TcpAcceptor(NetAddress::ptr net_addr);
+    TcpAcceptor(NetAddress::ptr net_addr);
 
   void init();
 
@@ -40,7 +40,7 @@ class TcpAcceptor {
 
 class TcpServer {
  public:
-  explicit TcpServer(NetAddress::ptr addr, int pool_size = 10);
+    TcpServer(NetAddress::ptr addr, int pool_size = 10);
 
   ~TcpServer();
 
