@@ -1,4 +1,7 @@
 #include "address.hpp"
+
+#include <netinet/in.h>
+#include <sys/socket.h>
 namespace net2 {
 
 ipv4_address::ipv4_address(const std::string& ip, uint16_t port)
@@ -9,12 +12,14 @@ ipv4_address::ipv4_address(const std::string& ip, uint16_t port)
   len_ = sizeof(sockaddr_in);
 }
 
+ipv4_address::ipv4_address() : addr_(new sockaddr), len_(sizeof(sockaddr_in)) {}
+
 ipv4_address::~ipv4_address() { delete addr_; }
 
 auto ipv4_address::plen() -> socklen_t* { return &len_; }
 
 auto ipv4_address::saddr() -> struct sockaddr* { return addr_; }
 
-auto ipv4_address::len() -> socklen_t const { return sizeof(sockaddr); }
+auto ipv4_address::len() const -> socklen_t { return sizeof(sockaddr); }
 
 }  // namespace net2

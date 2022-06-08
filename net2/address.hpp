@@ -9,7 +9,7 @@ namespace net2 {
 class address {
  public:
   virtual auto plen() -> socklen_t* = 0;
-  virtual auto len() -> socklen_t const = 0;
+  virtual auto len() const -> socklen_t = 0;
   virtual auto saddr() -> struct sockaddr* = 0;
 };
 
@@ -19,8 +19,9 @@ class ipv4_address final : public address,
                            std::enable_shared_from_this<ipv4_address> {
  public:
   ipv4_address(const std::string& ip, uint16_t port);
+  ipv4_address();
   ~ipv4_address();
-  auto len() -> socklen_t const override;
+  auto len()const  -> socklen_t  override;
   auto plen() -> socklen_t* override;
   auto saddr() -> sockaddr* override;
 

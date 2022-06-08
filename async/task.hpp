@@ -33,7 +33,7 @@ struct promise_base {
   promise_base() noexcept = default;
   ~promise_base() = default;
 
-  auto initial_suspend() { return std::suspend_always{}; }
+  auto initial_suspend() { return std::suspend_never{}; }
 
   auto final_suspend() noexcept(true) { return final_awaitable{}; }
 
@@ -153,6 +153,10 @@ class task {
 
   auto is_ready() const noexcept -> bool {
     return coroutine_ == nullptr || coroutine_.done();
+  }
+
+  auto done() const noexcept ->bool {
+    return coroutine_.done();
   }
 
   auto resume() -> bool {

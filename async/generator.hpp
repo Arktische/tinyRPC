@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coroutine>
+#include <memory>
 #include <type_traits>
 
 namespace async {
@@ -72,7 +73,7 @@ class generator_iterator {
 
   generator_iterator() noexcept = default;
 
-  generator_iterator(coroutine_handle coroutine) noexcept
+  explicit generator_iterator(coroutine_handle coroutine) noexcept
       : m_coroutine(coroutine) {}
 
   friend auto operator==(const generator_iterator& it,
@@ -82,7 +83,7 @@ class generator_iterator {
 
   friend auto operator!=(const generator_iterator& it,
                          generator_sentinel s) noexcept -> bool {
-    return it != s;
+    return !(it == s);
   }
 
   friend auto operator==(generator_sentinel s,

@@ -18,8 +18,11 @@ class sync_wait_event {
   ~sync_wait_event() = default;
 
   auto set() noexcept -> void {
-    std::lock_guard<std::mutex> g{mutex_};
-    set_ = true;
+    {
+      std::lock_guard<std::mutex> g{mutex_};
+      set_ = true;
+    }
+    cond_.notify_all();
   }
   auto reset() noexcept -> void {
     std::lock_guard<std::mutex> g{mutex_};
