@@ -8,12 +8,11 @@
 namespace net2 {
 class address {
  public:
+ using shared_type = std::shared_ptr<address>;
   virtual auto plen() -> socklen_t* = 0;
   virtual auto len() const -> socklen_t = 0;
   virtual auto saddr() -> struct sockaddr* = 0;
 };
-
-using addr_type = std::shared_ptr<address>;
 
 class ipv4_address final : public address,
                            std::enable_shared_from_this<ipv4_address> {

@@ -45,7 +45,7 @@ class generator_promise {
   }
 
   template <typename U>
-  auto await_transform(U&& value) -> std::suspend_never = delete;
+  auto await_transform(U&& value) -> U{return value;};
 
   auto rethrow_if_exception() -> void {
     if (except_) {

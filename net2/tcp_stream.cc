@@ -4,7 +4,7 @@
 namespace net2 {
 tcp_stream::tcp_stream(int fd) {}
 tcp_stream::~tcp_stream() {}
-tcp_stream::tcp_stream(int fd, addr_type peer) :peer_addr_(peer) {
+tcp_stream::tcp_stream(int fd, address::shared_type peer) :peer_addr_(peer) {
     
 }
 

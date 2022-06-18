@@ -1,6 +1,3 @@
-
-
-
 add_library(async event.cc thread_pool.cc)
 target_compile_features(async PUBLIC cxx_std_20)
 target_compile_options(async PUBLIC -Wall -Wextra -pipe)
@@ -15,3 +12,5 @@ include(GoogleTest)
 gtest_discover_tests(
         async_test
 )
+add_executable(testcc example.cc)
+target_link_libraries(testcc async)

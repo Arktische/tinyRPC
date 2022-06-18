@@ -5,6 +5,7 @@
 #include <stop_token>
 
 #include <async/generator.hpp>
+#include <async/io_context.hpp>
 #include <async/thread_pool.hpp>
 #include <common/error.hpp>
 
@@ -12,48 +13,24 @@
 #include "tcp_stream.hpp"
 namespace net2 {
 
-template <typename T>
-struct awaitable;
-
-template <>
-struct awaitable<epoll_event> : epoll_event {
-  int epfd;
-  auto await_ready() const noexcept -> bool { return false; }
-  void await_suspend(std::coroutine_handle<> h) {
-    data.ptr = h.address();
-    epoll_ctl(epfd, EPOLL_CTL_ADD, data.fd, this);
-  }
-  int await_resume() { return data.fd; }
-};
-
-inline auto make_await_epevent(uint32_t events, int fd, int epfd)
-    -> awaitable<epoll_event> {
-  return awaitable<epoll_event>{epoll_event{events, epoll_data_t{.fd = fd}},
-                                epfd};
-}
-
 class server {
   using type = server;
   using return_type = std::tuple<server, std::error_code>;
+  using shared_type = std::shared_ptr<type>;
 
  public:
-  static auto listen(addr_type addr) -> return_type;
+  static auto listen(address::shared_type addr) -> return_type;
   ~server();
 
-  auto accept() -> async::generator<tcp_stream>;
-
-  auto run() -> async::task<>;
+  auto accept(const std::stop_token& st) -> async::generator<tcp_stream>;
 
  private:
-  server(int fd, addr_type addr);
+  server(int fd, address::shared_type addr,
+         async::io_context::shared_type io_ctx);
 
  private:
-  std::stop_token st_;
+  async::io_context::shared_type io_ctx_;
   int fd_;
-  addr_type addr_;
-  int epfd_;
-
-  static int kMaxEvent;
-  static int kTimeout;
+  address::shared_type addr_;
 };
 }  // namespace net2
