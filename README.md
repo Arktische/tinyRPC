@@ -10,7 +10,7 @@ protocol support.
 After finishing this lab, you'll have an overview of networking programming under linux platform. This may help you in
 interview especially for campus recruiting.
 
-## Pre-request
+## Prerequisites
 
 Be sure to use the following environment：
 * cmake version >= 3.22
